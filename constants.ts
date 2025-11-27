@@ -143,7 +143,19 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     until_refresh: "until refresh",
     completed: "Completed",
     all_quests_done: "All quests completed!",
-    new_quests_tomorrow: "New quests available tomorrow!"
+    new_quests_tomorrow: "New quests available tomorrow!",
+    // Tournament
+    tournament_title: "Weekly Tournament",
+    tournament_desc: "Compete with players worldwide!",
+    join_tournament: "Join Tournament",
+    leaderboard: "Leaderboard",
+    your_rank: "Your Rank",
+    your_score: "Your Score",
+    potential_reward: "Potential Reward:",
+    your_reward: "Your Reward:",
+    claim_reward: "Claim Reward",
+    remaining: "remaining",
+    tournament_ended: "Tournament Ended"
   },
   tr: {
     language_selector: "Dil",
@@ -280,7 +292,19 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     until_refresh: "sonra yenilenir",
     completed: "Tamamlandı",
     all_quests_done: "Tüm görevleri tamamladın!",
-    new_quests_tomorrow: "Yarın yeni görevler seni bekliyor!"
+    new_quests_tomorrow: "Yarın yeni görevler seni bekliyor!",
+    // Tournament
+    tournament_title: "Haftalık Turnuva",
+    tournament_desc: "Dünya çapında oyuncularla yarış!",
+    join_tournament: "Turnuvaya Katıl",
+    leaderboard: "Lider Tablosu",
+    your_rank: "Sıralamanız",
+    your_score: "Puanınız",
+    potential_reward: "Potansiyel Ödül:",
+    your_reward: "Ödülünüz:",
+    claim_reward: "Ödül Topla",
+    remaining: "kaldı",
+    tournament_ended: "Turnuva Bitti"
   },
   es: {
     language_selector: "Idioma",

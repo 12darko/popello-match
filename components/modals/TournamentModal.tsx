@@ -4,18 +4,59 @@ import { Trophy, Crown, Medal, X, Clock, TrendingUp, Gift, Sparkles } from 'luci
 import { getRewardForRank } from '../../services/tournamentService';
 
 interface TournamentModalProps {
-    tournament: TournamentData;
+    tournament?: TournamentData;
     onClose: () => void;
-    onClaimReward: () => void;
+    onJoin: () => void;
     t: (key: string) => string;
 }
 
 export const TournamentModal: React.FC<TournamentModalProps> = ({
     tournament,
     onClose,
-    onClaimReward,
+    onJoin,
     t
 }) => {
+    // If no tournament, show join screen
+    if (!tournament) {
+        return (
+            <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-gradient-to-b from-purple-900 via-indigo-900 to-purple-950 w-full max-w-md rounded-[2rem] border-4 border-purple-700/50 shadow-2xl p-8 text-center relative overflow-hidden">
+                    {/* Decorative elements */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-0 left-0 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" />
+                        <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-75" />
+                    </div>
+
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 bg-purple-800/80 hover:bg-purple-700 p-2 rounded-xl transition-all"
+                    >
+                        <X size={20} className="text-white" />
+                    </button>
+
+                    <div className="relative z-10">
+                        <div className="mb-6 inline-block p-4 bg-purple-800/50 rounded-full">
+                            <Trophy size={64} className="text-yellow-400 animate-bounce-short" />
+                        </div>
+
+                        <h2 className="text-3xl font-black text-white mb-3">{t('tournament_title')}</h2>
+                        <p className="text-purple-200 mb-8">{t('tournament_desc')}</p>
+
+                        <button
+                            onClick={() => {
+                                onJoin();
+                                onClose();
+                            }}
+                            className="w-full bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-black font-black text-lg py-4 rounded-2xl hover:scale-105 transition-all shadow-lg"
+                        >
+                            {t('join_tournament')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     const timeRemaining = tournament.endTime - Date.now();
     const daysLeft = Math.floor(timeRemaining / (24 * 60 * 60 * 1000));
     const hoursLeft = Math.floor((timeRemaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
@@ -51,8 +92,8 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({
                                     <Clock size={16} />
                                     <span>
                                         {timeRemaining > 0
-                                            ? `${daysLeft}d ${hoursLeft}h remaining`
-                                            : 'Tournament Ended'
+                                            ? `${daysLeft}d ${hoursLeft}h ${t('remaining')}`
+                                            : t('tournament_ended')
                                         }
                                     </span>
                                 </div>
@@ -71,13 +112,13 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({
                         <div className="bg-purple-950/50 backdrop-blur-md rounded-2xl p-4 border border-purple-700/30 shadow-lg">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-purple-300 text-sm mb-1 font-bold">Your Rank</p>
+                                    <p className="text-purple-300 text-sm mb-1 font-bold">{t('your_rank')}</p>
                                     <p className="text-4xl font-black text-yellow-400 drop-shadow-lg">
                                         #{playerEntry.rank}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-purple-300 text-sm mb-1 font-bold">Your Score</p>
+                                    <p className="text-purple-300 text-sm mb-1 font-bold">{t('your_score')}</p>
                                     <p className="text-4xl font-black text-white drop-shadow-lg">
                                         {playerEntry.score.toLocaleString()}
                                     </p>
@@ -90,7 +131,7 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({
                                     <div className="flex items-center gap-2 mb-2">
                                         <Gift size={16} className="text-yellow-400" />
                                         <p className="text-purple-300 text-sm font-bold">
-                                            {timeRemaining > 0 ? 'Potential Reward:' : 'Your Reward:'}
+                                            {timeRemaining > 0 ? t('potential_reward') : t('your_reward')}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2 flex-wrap">
@@ -123,7 +164,7 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({
                 <div className="flex-1 overflow-y-auto p-6 relative">
                     <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
                         <TrendingUp size={24} className="text-purple-400" />
-                        Leaderboard
+                        {t('leaderboard')}
                     </h3>
 
                     <div className="space-y-2">
@@ -171,14 +212,14 @@ export const TournamentModal: React.FC<TournamentModalProps> = ({
                 {canClaimReward && (
                     <div className="p-6 border-t border-purple-700/50 bg-purple-900/50 backdrop-blur-sm">
                         <button
-                            onClick={onClaimReward}
+                            onClick={onJoin}
                             className="w-full bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-black font-black text-lg py-4 rounded-2xl hover:scale-105 transition-all shadow-lg hover:shadow-2xl relative overflow-hidden"
                         >
                             {/* Shimmer effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
                             <span className="relative flex items-center justify-center gap-2">
                                 <Trophy size={24} />
-                                Claim Reward
+                                {t('claim_reward')}
                             </span>
                         </button>
                     </div>
