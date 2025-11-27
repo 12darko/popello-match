@@ -99,19 +99,18 @@ export const platformService = {
     } catch (e) { console.error("Local Load Error", e); }
 
     // 2. Try Cloud Storage (Async)
-    // REAL IMPLEMENTATION EXAMPLE:
-    /*
+    // SIMULATED CLOUD (using separate local storage key)
     let cloudData: PlayerProgress | null = null;
-    if (Capacitor.getPlatform() === 'android') {
-       try {
-          await GooglePlayGamesServices.login();
-          const { data } = await GooglePlayGamesServices.loadSnapshot({ name: 'popello_save' });
-          if (data) cloudData = JSON.parse(data);
-       } catch (e) { console.error("Cloud Load Fail", e); }
-    }
-    */
-    // MOCK for now:
-    let cloudData: PlayerProgress | null = null;
+    try {
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      const cloudSaved = localStorage.getItem('popello_cloud_save_sim');
+      if (cloudSaved) {
+        cloudData = JSON.parse(cloudSaved);
+        console.log("PLATFORM: Cloud data found (Simulated)");
+      }
+    } catch (e) { console.error("Cloud Load Fail", e); }
 
     // 3. Conflict Resolution (Newest Wins)
     if (localData && cloudData) {
@@ -123,7 +122,7 @@ export const platformService = {
       }
     }
 
-    if (cloudData) return cloudData;
+    if (cloudData && !localData) return cloudData;
     if (localData) return { ...DEFAULT_PROGRESS, ...localData }; // Merge to ensure new fields like haptics are present
 
     return DEFAULT_PROGRESS;
@@ -141,20 +140,14 @@ export const platformService = {
       localStorage.setItem('popelloProgress_v2', JSON.stringify(dataToSave));
     } catch (e) { console.error("Local Save Error", e); }
 
-    // 2. Save Cloud
-    // REAL IMPLEMENTATION EXAMPLE:
-    /*
-    if (Capacitor.getPlatform() === 'android') {
-       try {
-          await GooglePlayGamesServices.saveSnapshot({ 
-            name: 'popello_save', 
-            data: JSON.stringify(dataToSave), 
-            description: 'Level ' + dataToSave.maxLevelReached 
-          });
-       } catch (e) { console.error("Cloud Save Fail", e); }
-    }
-    */
-    console.log("PLATFORM: Data synced to cloud (Mock)");
+    // 2. Save Cloud (Simulated)
+    try {
+      // Simulate network delay
+      setTimeout(() => {
+        localStorage.setItem('popello_cloud_save_sim', JSON.stringify(dataToSave));
+        console.log("PLATFORM: Data synced to cloud (Simulated)");
+      }, 1000);
+    } catch (e) { console.error("Cloud Save Fail", e); }
   },
 
   // --- 2. MONETIZATION (IAP) ---

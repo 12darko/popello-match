@@ -177,6 +177,11 @@ export interface Effect {
   text?: string;
   row: number;
   col: number;
+  // Visual properties
+  x?: number; // Percentage 0-100
+  y?: number; // Percentage 0-100
+  dx?: number; // Delta X for particles
+  dy?: number; // Delta Y for particles
   color?: string;
 }
 

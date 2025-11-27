@@ -43,10 +43,15 @@ import { TournamentModal } from './components/modals/TournamentModal';
 import { initializeTournament, shouldStartNewTournament } from './services/tournamentService';
 import { checkForTutorials } from './services/tutorialService';
 import { useBoosterMode } from './hooks/useBoosterMode';
+import { MockAdModal } from './components/modals/MockAdModal';
+import { MockPaymentModal } from './components/modals/MockPaymentModal';
+import { PageTransition } from './components/effects/PageTransition';
+import { LoadingScreen } from './components/LoadingScreen'; // NEW // NEW // NEW
 
 
 const App: React.FC = () => {
   // STATE
+  const [isLoading, setIsLoading] = useState(true); // NEW
   const [gameState, setGameState] = useState<GameState>(GameState.Menu);
   const [grid, setGrid] = useState<BlockData[][]>([]);
   const [progress, setProgress] = useState<PlayerProgress>(DEFAULT_PROGRESS);
@@ -69,6 +74,8 @@ const App: React.FC = () => {
   const [showDailyBonus, setShowDailyBonus] = useState(false);
   const [showRateUs, setShowRateUs] = useState(false);
   const [showAdModal, setShowAdModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false); // NEW
+  const [paymentSku, setPaymentSku] = useState<string | null>(null); // NEW
   const [showTutorial, setShowTutorial] = useState<string | null>(null);
   const [isProcessingIAP, setIsProcessingIAP] = useState(false);
   const [showOutOfLives, setShowOutOfLives] = useState(false); // NEW
@@ -131,6 +138,9 @@ const App: React.FC = () => {
 
       setProgress(loadedData);
       audioManager.setEnabled(loadedData.soundEnabled);
+
+      // Simulate a minimum loading time for the splash screen effect
+      setTimeout(() => setIsLoading(false), 1500);
     };
     init();
     audioManager.startMenuMusic();
@@ -158,24 +168,51 @@ const App: React.FC = () => {
   }, [progress.maxLevelReached, gameState]);
 
   // Helper for effects
-  const addEffect = (type: 'TEXT' | 'PARTICLE', x: number, y: number, content?: string, color?: string) => {
-    const id = uuidv4();
-    // Map 'TEXT'/'PARTICLE' to Effect type
-    // Assuming 'TEXT' -> 'score', 'PARTICLE' -> 'match' based on usage
+  // Helper for effects
+  const addEffect = (type: 'TEXT' | 'PARTICLE', col: number, row: number, content?: string, color?: string) => {
     const effectType = type === 'TEXT' ? 'score' : 'match';
 
-    setEffects(prev => [...prev, {
-      id,
-      type: effectType,
-      col: x, // Using x as col (percentage)
-      row: y, // Using y as row (percentage)
-      text: content,
-      color
-    }]);
+    // Calculate position percentages
+    const gridRows = levelConfig?.gridSize.rows || 8;
+    const gridCols = levelConfig?.gridSize.cols || 8;
+    const xPct = (col / gridCols) * 100 + (100 / gridCols) / 2;
+    const yPct = (row / gridRows) * 100 + (100 / gridRows) / 2;
 
-    setTimeout(() => {
-      setEffects(prev => prev.filter(e => e.id !== id));
-    }, 1000);
+    if (type === 'TEXT') {
+      const id = uuidv4();
+      setEffects(prev => [...prev, {
+        id,
+        type: effectType,
+        col,
+        row,
+        x: xPct,
+        y: yPct,
+        text: content,
+        color
+      }]);
+      setTimeout(() => setEffects(prev => prev.filter(e => e.id !== id)), 1000);
+    } else {
+      // Particle Burst
+      const particles = Array.from({ length: 8 }).map(() => ({
+        id: uuidv4(),
+        type: 'match' as const,
+        col,
+        row,
+        x: xPct,
+        y: yPct,
+        dx: (Math.random() - 0.5) * 200, // Spread
+        dy: (Math.random() - 0.5) * 200,
+        color
+      }));
+
+      setEffects(prev => [...prev, ...particles]);
+
+      // Cleanup particles
+      setTimeout(() => {
+        const ids = particles.map(p => p.id);
+        setEffects(prev => prev.filter(e => !ids.includes(e.id)));
+      }, 1000);
+    }
   };
 
   // NEW: Combo timeout - reset combo after 3 seconds of inactivity
@@ -568,12 +605,14 @@ const App: React.FC = () => {
 
   // --- SCREENS ---
 
+  if (isLoading) return <LoadingScreen />;
+
   if (gameState === GameState.Playing) {
     if (!levelConfig) return null;
     const isWarning = movesLeft <= 3;
 
     return (
-      <div className="h-full w-full relative flex flex-col">
+      <PageTransition animation="scale" className="h-full w-full relative flex flex-col">
         <DynamicBackground />
         <EffectsLayer effects={effects} />
 
@@ -683,13 +722,13 @@ const App: React.FC = () => {
           const newSeen = { ...progress.seenTutorials, [showTutorial]: true };
           setProgress(p => ({ ...p, seenTutorials: newSeen }));
         }} t={t} />}
-      </div>
+      </PageTransition>
     );
   }
 
   // --- LEVEL SELECT & MENU ---
   return (
-    <div className="h-full w-full bg-[#2e1065] relative overflow-hidden flex flex-col">
+    <PageTransition animation="fade" className="h-full w-full bg-[#2e1065] relative overflow-hidden flex flex-col">
       <DynamicBackground />
 
       {/* Top Bar - Redesigned for better spacing */}
@@ -872,16 +911,10 @@ const App: React.FC = () => {
               }));
             }
           }}
-          onBuyIAP={async (sku) => {
-            setIsProcessingIAP(true);
-            const result = await platformService.purchaseItem(sku);
-            setIsProcessingIAP(false);
-            if (result.success) {
-              audioManager.playWin();
-              if (sku === 'remove_ads') setProgress(p => ({ ...p, adsRemoved: true, coins: p.coins + 500 }));
-              if (sku === 'coins_small') setProgress(p => ({ ...p, coins: p.coins + 1000 }));
-              if (sku === 'coins_big') setProgress(p => ({ ...p, coins: p.coins + 5000 }));
-            }
+          onBuyIAP={(sku) => {
+            setPaymentSku(sku);
+            setShowPaymentModal(true);
+            setShowShop(false); // Close shop to show payment clearly (optional, but cleaner)
           }}
           onWatchAd={async () => {
             setShowAdModal(true);
@@ -966,6 +999,73 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* NEW: Mock Payment Modal */}
+      {showPaymentModal && paymentSku && (
+        <MockPaymentModal
+          sku={paymentSku}
+          onComplete={() => {
+            audioManager.playWin();
+
+            // Grant Rewards
+            if (paymentSku === 'remove_ads') {
+              setProgress(p => ({ ...p, adsRemoved: true, coins: p.coins + 500 }));
+            }
+            if (paymentSku === 'coins_small') {
+              setProgress(p => ({ ...p, coins: p.coins + 1000 }));
+            }
+            if (paymentSku === 'coins_big') {
+              setProgress(p => ({ ...p, coins: p.coins + 5000 }));
+            }
+
+            // Save
+            // Note: We need to save the updated progress. Since setProgress is async, 
+            // we should ideally use a useEffect or save the *calculated* new state.
+            // For simplicity, we'll rely on the existing useEffect[progress] hook to save.
+
+            setShowPaymentModal(false);
+            setPaymentSku(null);
+            setShowShop(true); // Re-open shop
+          }}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setPaymentSku(null);
+            setShowShop(true);
+          }}
+        />
+      )}
+
+      {/* NEW: Mock Ad Modal */}
+      {showAdModal && (
+        <MockAdModal
+          onComplete={() => {
+            // Reward the user
+            const rewardAmount = 100;
+
+            // Update stats
+            const newCount = progress.dailyAdWatchCount + 1;
+            const today = new Date().toDateString();
+
+            setProgress(prev => ({
+              ...prev,
+              dailyAdWatchCount: newCount,
+              lastAdWatchDate: today,
+              coins: prev.coins + rewardAmount
+            }));
+
+            // Save
+            platformService.saveGameData({
+              ...progress,
+              dailyAdWatchCount: newCount,
+              lastAdWatchDate: today,
+              coins: progress.coins + rewardAmount
+            });
+
+            // Close modal
+            setShowAdModal(false);
+          }}
+          onClose={() => setShowAdModal(false)}
+        />
+      )}
       {/* NEW: Tournament Modal */}
       {showTournament && (
         <TournamentModal
@@ -978,7 +1078,7 @@ const App: React.FC = () => {
           t={t}
         />
       )}
-    </div >
+    </PageTransition>
   );
 };
 
