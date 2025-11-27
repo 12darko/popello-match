@@ -120,6 +120,33 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                         </div>
                     ))}
                 </div>
+
+                {/* Boosters Section */}
+                <div className="space-y-3">
+                    <h3 className="text-purple-400 text-[10px] font-bold uppercase tracking-widest ml-1">{t('boosters')}</h3>
+                    {[
+                        { id: 'rockets', name: t('powerup_rocket'), desc: t('powerup_rocket_desc'), emoji: '🚀', cost: 200, owned: inventory.rockets, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+                        { id: 'bombs', name: t('powerup_bomb'), desc: t('powerup_bomb_desc'), emoji: '💣', cost: 250, owned: inventory.bombs, color: 'text-red-400', bg: 'bg-red-500/20' },
+                        { id: 'discoBalls', name: t('powerup_disco'), desc: t('powerup_disco_desc'), emoji: '🪩', cost: 300, owned: inventory.discoBalls, color: 'text-purple-400', bg: 'bg-purple-500/20' }
+                    ].map(item => (
+                        <div key={item.id} className="bg-indigo-900/50 p-3 rounded-2xl border border-indigo-800 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-200%] animate-[shimmer_2s_infinite]" />
+                            <div className="flex items-center gap-3 flex-1 relative z-10">
+                                <div className={`p-3 rounded-xl ${item.bg} ${item.color} text-2xl flex items-center justify-center`}>{item.emoji}</div>
+                                <div>
+                                    <div className="text-white font-bold text-sm">{item.name}</div>
+                                    <div className="text-indigo-300 text-[10px]">{item.desc}</div>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1 relative z-10">
+                                <div className="text-xs text-indigo-400 font-bold">{t('owned')}: {item.owned}</div>
+                                <button onClick={() => onBuyItem(item.id, item.cost)} className="bg-purple-700 hover:bg-purple-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow-md active:translate-y-0.5 transition-all">
+                                    {item.cost} <Coins size={10} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
                 <div className="pt-4 text-center">
                     <button onClick={onRestorePurchases} className="text-indigo-400 text-xs font-bold hover:text-white underline">{t('restore_purchases')}</button>
                 </div>

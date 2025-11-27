@@ -28,9 +28,9 @@ export const DEFAULT_PROGRESS: PlayerProgress = {
   inventory: {
     hammers: 1,
     shuffles: 1,
-    rockets: 0,
-    bombs: 0,
-    discoBalls: 0,
+    rockets: 2,
+    bombs: 2,
+    discoBalls: 1,
     rainbows: 0
   },
 
