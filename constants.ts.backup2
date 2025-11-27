@@ -1,0 +1,759 @@
+
+
+import { BlockType, LevelConfig, PowerUpType } from './types';
+import { Heart, Droplets, Clover, Zap, Star, Diamond, Flame, Box, Hexagon, Shield, Lock, Rocket, Bomb, Sparkles, Rainbow, Cloud, Grid3x3, Droplet, Tornado } from 'lucide-react';
+
+import React from 'react';
+
+
+// --- LOCALIZATION ---
+export const TRANSLATIONS: Record<string, Record<string, string>> = {
+  en: {
+    language_selector: "Language",
+    developed_by: "Developed By",
+    stars_label: "STARS",
+    score: "SCORE",
+    play: "PLAY",
+    levels: "LEVELS",
+    shop: "SHOP",
+    options: "OPTIONS",
+    level: "LEVEL",
+    coins: "COINS",
+    moves: "MOVES",
+    goals: "GOALS",
+    hint: "HINT",
+    thinking: "Thinking...",
+    brainy_bot: "Brainy Bot",
+    victory: "VICTORY!",
+    failed: "FAILED",
+    earned: "Earned",
+    next_level: "NEXT LEVEL",
+    retry: "RETRY",
+    menu: "MENU",
+    settings: "SETTINGS",
+    sound_fx: "Sound FX",
+    haptics: "Vibration",
+    privacy_policy: "Privacy Policy",
+    delete_data: "Delete My Data",
+    delete_confirm: "Are you sure? This cannot be undone.",
+    your_coins: "Your Coins",
+    free_coins: "Free Coins",
+    today: "Today",
+    items: "Items",
+    hammer: "Hammer",
+    hammer_desc: "Break 1 block",
+    shuffle: "Shuffle",
+    shuffle_desc: "Mix board",
+    owned: "Owned",
+    max: "MAX",
+    watch_ad_title: "AWESOME!",
+    watch_ad_desc: "Bonus is on the way...",
+    close: "CLOSE",
+    got_it: "GOT IT!",
+    new_hazard: "New Hazard!",
+    no_moves: "No moves! Shuffling...",
+    premium_shop: "PREMIUM SHOP",
+    remove_ads: "Remove Ads",
+    remove_ads_desc: "No ads + 500 Coins",
+    coin_pack_small: "Handful of Coins",
+    coin_pack_small_desc: "1000 Coins",
+    coin_pack_big: "Chest of Coins",
+    coin_pack_big_desc: "5000 Coins + Bonus",
+    buy: "Buy",
+    purchased: "Purchased",
+    processing: "Processing...",
+    restore_purchases: "Restore Purchases",
+    out_of_moves: "OUT OF MOVES!",
+    keep_playing: "Keep Playing?",
+    get_moves: "+5 MOVES",
+    give_up: "Give Up",
+    so_close: "You were so close!",
+    daily_bonus: "DAILY BONUS",
+    day: "Day",
+    claim: "CLAIM",
+    calendar: "Calendar",
+    come_back: "Come back tomorrow!",
+    streak: "Day Streak",
+    next_reward: "Next Reward",
+    tut_crate_title: "Wooden Crate",
+    tut_crate_desc: "These boxes are in the way! Pop any blocks NEXT to a crate to break it.",
+    tut_stone_title: "Stone Block",
+    tut_stone_desc: "Tough as a rock! Match blocks adjacent to stones to smash them.",
+    tut_obsidian_title: "Obsidian",
+    tut_obsidian_desc: "The hardest material! You need to blast near it 3 times to destroy it.",
+    tut_ice_title: "Ice Block",
+    tut_ice_desc: "Brrr! These blocks are frozen. Match next to them to melt the ice.",
+    hint_match: "Match the group of {count} {color} blocks at ({row}, {col}).",
+    hint_hazard: "Blast the {color} blocks at ({row}, {col}) to break the obstacles!",
+    hint_fallback: "Look for larger groups to create combos!",
+    block_fire: "Fire",
+    block_water: "Water",
+    block_nature: "Nature",
+    block_electric: "Electric",
+    block_cosmic: "Cosmic",
+    rate_title: "Enjoying the Game?",
+    rate_desc: "We'd love to hear your feedback! A 5-star rating helps us a lot.",
+    rate_btn: "RATE US!",
+    rate_later: "Remind Me Later",
+    rate_never: "No, Thanks",
+    // Power-ups
+    powerup_rocket: "Rocket",
+    powerup_rocket_desc: "Destroys entire row or column",
+    powerup_bomb: "Bomb",
+    powerup_bomb_desc: "Destroys 3x3 area",
+    powerup_disco: "Disco Ball",
+    powerup_disco_desc: "Destroys all same color blocks",
+    powerup_rainbow: "Rainbow",
+    powerup_rainbow_desc: "Matches with any color",
+    // Lives
+    lives: "Lives",
+    out_of_lives: "Out of Lives!",
+    wait_for_life: "Wait {time} for next life",
+    buy_lives: "Buy Lives",
+    unlimited_lives: "Unlimited Lives",
+    // Combo
+    combo: "COMBO",
+    nice: "NICE!",
+    great: "GREAT!",
+    awesome: "AWESOME!",
+    incredible: "INCREDIBLE!",
+    amazing: "AMAZING!",
+    legendary: "LEGENDARY!",
+    // Pre-Game Boosters
+    select_boosters: "Select Boosters",
+    select_boosters_desc: "Choose power-ups to start with",
+    rocket: "Rocket",
+    bomb: "Bomb",
+    disco_ball: "Disco Ball",
+    available: "Available",
+    none: "None",
+    total_selected: "Total Selected",
+    boosters: "Boosters",
+    skip: "Skip",
+    start_game: "Start Game",
+
+    // Quests
+    quests: "Quests",
+    daily_quests: "Daily Quests",
+    quest_collect: "Collect {count} {color} blocks",
+    quest_win: "Win {count} levels",
+    quest_powerup: "Use {count} power-ups",
+    quest_score: "Reach {score} points",
+    quest_combo: "Create {count} combos"
+  },
+  tr: {
+    language_selector: "Dil",
+    developed_by: "Geliştirici",
+    stars_label: "YILDIZ",
+    score: "PUAN",
+    play: "OYNA",
+    levels: "SEVİYELER",
+    shop: "MARKET",
+    options: "AYARLAR",
+    level: "SEVİYE",
+    coins: "ALTIN",
+    moves: "HAMLE",
+    goals: "HEDEFLER",
+    hint: "İPUCU",
+    thinking: "Düşünüyor...",
+    brainy_bot: "Zeki Bot",
+    victory: "ZAFER!",
+    failed: "BAŞARISIZ",
+    earned: "Kazanılan",
+    next_level: "SONRAKİ SEVİYE",
+    retry: "TEKRAR DENE",
+    menu: "MENÜ",
+    settings: "AYARLAR",
+    sound_fx: "Ses Efektleri",
+    haptics: "Titreşim",
+    privacy_policy: "Gizlilik Politikası",
+    delete_data: "Verilerimi Sil",
+    delete_confirm: "Emin misin? Bu işlem geri alınamaz.",
+    your_coins: "Altınların",
+    free_coins: "Bedava Altın",
+    today: "Bugün",
+    items: "Eşyalar",
+    hammer: "Çekiç",
+    hammer_desc: "1 bloğu kırar",
+    shuffle: "Karıştır",
+    shuffle_desc: "Tahtayı karıştırır",
+    owned: "Sahip olunan",
+    max: "DOLDU",
+    watch_ad_title: "HARİKA!",
+    watch_ad_desc: "Ödülün yolda...",
+    close: "KAPAT",
+    got_it: "ANLADIM!",
+    new_hazard: "Yeni Engel!",
+    no_moves: "Hamle kalmadı! Karıştırılıyor...",
+    premium_shop: "PREMIUM MARKET",
+    remove_ads: "Reklamları Kaldır",
+    remove_ads_desc: "Reklamsız Oyun + 500 Altın",
+    coin_pack_small: "Bir Avuç Altın",
+    coin_pack_small_desc: "1000 Altın",
+    coin_pack_big: "Hazine Sandığı",
+    coin_pack_big_desc: "5000 Altın + Bonus",
+    buy: "Satın Al",
+    purchased: "Satın Alındı",
+    processing: "İşleniyor...",
+    restore_purchases: "Satın Alımları Geri Yükle",
+    out_of_moves: "HAMLE BİTTİ!",
+    keep_playing: "Devam Et?",
+    get_moves: "+5 HAMLE",
+    give_up: "Pes Et",
+    so_close: "Çok yaklaşmıştın!",
+    daily_bonus: "GÜNLÜK ÖDÜL",
+    day: "Gün",
+    claim: "TOPLA",
+    calendar: "Takvim",
+    come_back: "Yarın yine gel!",
+    streak: "Giriş Serisi",
+    next_reward: "Sonraki Ödül",
+    tut_crate_title: "Tahta Kasa",
+    tut_crate_desc: "Bu kutular yolu tıkıyor! Kutunun YANINDAKİ blokları patlatarak onu kırabilirsin.",
+    tut_stone_title: "Taş Blok",
+    tut_stone_desc: "Kaya gibi sert! Kırmak için taşın yanındaki blokları eşleştir.",
+    tut_obsidian_title: "Obsidyen",
+    tut_obsidian_desc: "En sert madde! Yok etmek için yakınında 3 kez patlatma yapmalısın.",
+    tut_ice_title: "Buz Blok",
+    tut_ice_desc: "Brrr! Bu bloklar donmuş. Buzu eritmek için yanlarında eşleştirme yap.",
+    tut_balloon_title: "Balon",
+    tut_balloon_desc: "Uçup gidiyor! Patlatmak için yanında eşleştirme yap.",
+    tut_chain_title: "Zincir",
+    tut_chain_desc: "Bu blok kilitli! Zinciri kırmak için yanında eşleştirme yap.",
+    tut_jelly_title: "Jöle",
+    tut_jelly_desc: "Yapış yapış! Temizlemek için üzerindeki bloğu patlat.",
+    tut_cage_title: "Kafes",
+    tut_cage_desc: "İçinde blok var! Kafesi kırmak için yanında eşleştirme yap.",
+    tut_honey_title: "Bal",
+    tut_honey_desc: "Yapışkan! Temizlemek için yanında eşleştirme yap.",
+    tut_vortex_title: "Girdap",
+    tut_vortex_desc: "Blokları başka yere ışınlar! Girdabı kapatmak için yanında eşleştirme yap.",
+
+    hint_match: "({row}, {col}) konumundaki {count} {color} bloğu eşleştir.",
+    hint_hazard: "Engelleri kırmak için ({row}, {col}) konumundaki {color} blokları patlat!",
+    hint_fallback: "Kombolar oluşturmak için daha büyük gruplara bak!",
+    block_fire: "Ateş",
+    block_water: "Su",
+    block_nature: "Doğa",
+    block_electric: "Elektrik",
+    block_cosmic: "Kozmik",
+    rate_title: "Oyunu Beğendin mi?",
+    rate_desc: "Geri bildirimlerin bizim için çok değerli! 5 yıldız vererek bize destek olabilirsin.",
+    rate_btn: "OYLA!",
+    rate_later: "Sonra Hatırlat",
+    rate_never: "Hayır, Teşekkürler",
+    // Power-ups
+    powerup_rocket: "Roket",
+    powerup_rocket_desc: "Tüm satırı veya sütunu yok eder",
+    powerup_bomb: "Bomba",
+    powerup_bomb_desc: "3x3 alanı patlatır",
+    powerup_disco: "Disko Topu",
+    powerup_disco_desc: "Aynı renkteki tüm blokları yok eder",
+    powerup_rainbow: "Gökkuşağı",
+    powerup_rainbow_desc: "Her renkle eşleşir",
+    // Lives
+    lives: "Canlar",
+    out_of_lives: "Canın Bitti!",
+    wait_for_life: "Sonraki can için {time} bekle",
+    buy_lives: "Can Satın Al",
+    unlimited_lives: "Sınırsız Can",
+    // Combo
+    combo: "KOMBO",
+    nice: "GÜZEL!",
+    great: "HARİKA!",
+    awesome: "SÜPER!",
+    incredible: "İNANILMAZ!",
+    amazing: "MUHTEŞEM!",
+    legendary: "EFSANEVİ!",
+    // Quests
+    quests: "Görevler",
+    daily_quests: "Günlük Görevler",
+    quest_collect: "{count} {color} bloğu topla",
+    quest_win: "{count} seviye kazan",
+    quest_powerup: "{count} power-up kullan",
+    quest_score: "{score} puana ulaş",
+    quest_combo: "{count} kombo yap"
+  },
+  es: {
+    language_selector: "Idioma",
+    developed_by: "Desarrollado por",
+    stars_label: "ESTRELLAS",
+    score: "PUNTOS",
+    play: "JUGAR",
+    levels: "NIVELES",
+    shop: "TIENDA",
+    options: "OPCIONES",
+    level: "NIVEL",
+    coins: "MONEDAS",
+    moves: "MOVIMIENTOS",
+    goals: "OBJETIVOS",
+    hint: "PISTA",
+    thinking: "Pensando...",
+    victory: "¡VICTORIA!",
+    failed: "FALLADO",
+    earned: "Ganado",
+    next_level: "SIGUIENTE NIVEL",
+    retry: "REINTENTAR",
+    menu: "MENÚ",
+    settings: "AJUSTES",
+    sound_fx: "Efectos de Sonido",
+    haptics: "Vibración",
+    privacy_policy: "Política de Privacidad",
+    delete_data: "Borrar Mis Datos",
+    delete_confirm: "¿Estás seguro? Esto no se puede deshacer.",
+    your_coins: "Tus Monedas",
+    free_coins: "Monedas Gratis",
+    today: "Hoy",
+    items: "Objetos",
+    hammer: "Martillo",
+    hammer_desc: "Rompe 1 bloque",
+    shuffle: "Barajar",
+    shuffle_desc: "Mezcla el tablero",
+    owned: "Propiedad",
+    max: "MÁX",
+    watch_ad_title: "¡GENIAL!",
+    watch_ad_desc: "La bonificación está en camino...",
+    close: "CERRAR",
+    got_it: "¡ENTENDIDO!",
+    new_hazard: "¡Nuevo Peligro!",
+    no_moves: "¡Sin movimientos! Barajando...",
+    premium_shop: "TIENDA PREMIUM",
+    remove_ads: "Quitar Anuncios",
+    remove_ads_desc: "Sin anuncios + 500 Monedas",
+    coin_pack_small: "Puñado de Monedas",
+    coin_pack_small_desc: "1000 Monedas",
+    coin_pack_big: "Cofre de Monedas",
+    coin_pack_big_desc: "5000 Monedas + Bono",
+    buy: "Comprar",
+    purchased: "Comprado",
+    processing: "Procesando...",
+    restore_purchases: "Restaurar Compras",
+    out_of_moves: "¡SIN MOVIMIENTOS!",
+    keep_playing: "¿Seguir jugando?",
+    get_moves: "+5 MOVIMIENTOS",
+    give_up: "Rendirse",
+    so_close: "¡Estabas tan cerca!",
+    daily_bonus: "BONO DIARIO",
+    day: "Día",
+    claim: "RECLAMAR",
+    calendar: "Calendario",
+    come_back: "¡Vuelve mañana!",
+    streak: "Racha",
+    next_reward: "Siguiente Premio",
+    tut_crate_title: "Caja de Madera",
+    tut_crate_desc: "¡Estas cajas bloquean el camino! Explota bloques AL LADO de una caja para romperla.",
+    tut_stone_title: "Bloque de Piedra",
+    tut_stone_desc: "¡Duro como una roca! Combina bloques adyacentes a las piedras para romperlas.",
+    tut_obsidian_title: "Obsidiana",
+    tut_obsidian_desc: "¡El material más duro! Necesitas explotar cerca 3 veces para destruirlo.",
+    tut_ice_title: "Bloque de Hielo",
+    tut_ice_desc: "¡Brrr! Estos bloques están congelados. Combina junto a ellos para derretir el hielo.",
+    hint_match: "Combina el grupo de {count} bloques {color} en ({row}, {col}).",
+    hint_hazard: "¡Explota los bloques {color} en ({row}, {col}) para romper los obstáculos!",
+    hint_fallback: "¡Busca grupos más grandes para crear combos!",
+    block_fire: "Fuego",
+    block_water: "Agua",
+    block_nature: "Naturaleza",
+    block_electric: "Eléctrico",
+    block_cosmic: "Cósmico",
+    rate_title: "¿Te gusta el juego?",
+    rate_desc: "¡Nos encantaría saber tu opinión! Una calificación de 5 estrellas nos ayuda mucho.",
+    rate_btn: "¡CALIFÍCANOS!",
+    rate_later: "Recordar más tarde",
+    rate_never: "No, gracias"
+  },
+  pt: {
+    language_selector: "Idioma",
+    developed_by: "Desenvolvido por",
+    stars_label: "ESTRELAS",
+    score: "PONTOS",
+    play: "JOGAR",
+    levels: "NÍVEIS",
+    shop: "LOJA",
+    options: "OPÇÕES",
+    level: "NÍVEL",
+    coins: "MOEDAS",
+    moves: "MOVIMENTOS",
+    goals: "OBJETIVOS",
+    hint: "DICA",
+    thinking: "Pensando...",
+    victory: "VITÓRIA!",
+    failed: "FALHOU",
+    earned: "Ganho",
+    next_level: "PRÓXIMO NÍVEL",
+    retry: "TENTAR DE NOVO",
+    menu: "MENU",
+    settings: "CONFIGURAÇÕES",
+    sound_fx: "Efeitos Sonoros",
+    haptics: "Vibração",
+    privacy_policy: "Política de Privacidade",
+    delete_data: "Apagar Meus Dados",
+    delete_confirm: "Tem certeza? Isso não pode ser desfeito.",
+    your_coins: "Suas Moedas",
+    free_coins: "Moedas Grátis",
+    today: "Hoje",
+    items: "Itens",
+    hammer: "Martelo",
+    hammer_desc: "Quebra 1 bloco",
+    shuffle: "Misturar",
+    shuffle_desc: "Mistura o tabuleiro",
+    owned: "Possuído",
+    max: "MÁX",
+    watch_ad_title: "INCRÍVEL!",
+    watch_ad_desc: "O bônus está a caminho...",
+    close: "FECHAR",
+    got_it: "ENTENDI!",
+    new_hazard: "Novo Perigo!",
+    no_moves: "Sem movimentos! Misturando...",
+    premium_shop: "LOJA PREMIUM",
+    remove_ads: "Remover Anúncios",
+    remove_ads_desc: "Sem anúncios + 500 Moedas",
+    coin_pack_small: "Punhado de Moedas",
+    coin_pack_small_desc: "1000 Moedas",
+    coin_pack_big: "Baú de Moedas",
+    coin_pack_big_desc: "5000 Moedas + Bônus",
+    buy: "Comprar",
+    purchased: "Comprado",
+    processing: "Processando...",
+    restore_purchases: "Restaurar Compras",
+    out_of_moves: "SEM MOVIMENTOS!",
+    keep_playing: "Continuar Jogando?",
+    get_moves: "+5 MOVIMIENTOS",
+    give_up: "Desistir",
+    so_close: "Você estava tão perto!",
+    daily_bonus: "BÔNUS DIÁRIO",
+    day: "Dia",
+    claim: "RESGATAR",
+    calendar: "Calendário",
+    come_back: "Volte amanhã!",
+    streak: "Sequência",
+    next_reward: "Próximo Prêmio",
+    tut_crate_title: "Caixote de Madeira",
+    tut_crate_desc: "Esses caixotes bloqueiam o caminho! Estoure blocos AO LADO de um caixote para quebrá-lo.",
+    tut_stone_title: "Bloco de Pedra",
+    tut_stone_desc: "Duro como rocha! Combine blocos adjacentes às pedras para esmagá-las.",
+    tut_obsidian_title: "Obsidiana",
+    tut_obsidian_desc: "O material mais duro! Você precisa explodir perto dele 3 vezes para destruir.",
+    tut_ice_title: "Bloco de Gelo",
+    tut_ice_desc: "Brrr! Esses blocos estão congelados. Combine perto deles para derreter o gelo.",
+    hint_match: "Combine o grupo de {count} blocos {color} em ({row}, {col}).",
+    hint_hazard: "Estoure os blocos {color} em ({row}, {col}) para quebrar os obstáculos!",
+    hint_fallback: "Procure grupos maiores para criar combos!",
+    block_fire: "Fogo",
+    block_water: "Água",
+    block_nature: "Natureza",
+    block_electric: "Elétrico",
+    block_cosmic: "Cósmico",
+    rate_title: "Gostando do Jogo?",
+    rate_desc: "Adoraríamos ouvir seu feedback! Uma avaliação de 5 estrelas nos ajuda muito.",
+    rate_btn: "AVALIAR!",
+    rate_later: "Lembrar Mais Tarde",
+    rate_never: "Não, Obrigado"
+  }
+};
+
+export const BLOCK_STYLES: Record<BlockType, {
+  color: string;
+  icon: any;
+  gradient: string;
+  textColor: string;
+  borderColor?: string;
+  nameKey?: string;
+}> = {
+  [BlockType.Fire]: {
+    color: 'bg-red-500',
+    icon: Flame,
+    gradient: 'from-red-400 to-red-600',
+    textColor: 'text-red-100',
+    borderColor: 'border-red-300',
+    nameKey: 'block_fire'
+  },
+  [BlockType.Water]: {
+    color: 'bg-blue-500',
+    icon: Droplets,
+    gradient: 'from-blue-400 to-blue-600',
+    textColor: 'text-blue-100',
+    borderColor: 'border-blue-300',
+    nameKey: 'block_water'
+  },
+  [BlockType.Nature]: {
+    color: 'bg-green-500',
+    icon: Clover,
+    gradient: 'from-green-400 to-green-600',
+    textColor: 'text-green-100',
+    borderColor: 'border-green-300',
+    nameKey: 'block_nature'
+  },
+  [BlockType.Electric]: {
+    color: 'bg-yellow-500',
+    icon: Zap,
+    gradient: 'from-yellow-400 to-yellow-600',
+    textColor: 'text-yellow-100',
+    borderColor: 'border-yellow-300',
+    nameKey: 'block_electric'
+  },
+  [BlockType.Cosmic]: {
+    color: 'bg-purple-500',
+    icon: Star,
+    gradient: 'from-purple-400 to-purple-600',
+    textColor: 'text-purple-100',
+    borderColor: 'border-purple-300',
+    nameKey: 'block_cosmic'
+  },
+  [BlockType.Stone]: {
+    color: 'bg-stone-500',
+    icon: Hexagon,
+    gradient: 'from-stone-400 to-stone-600',
+    textColor: 'text-stone-200',
+    borderColor: 'border-stone-400',
+    nameKey: 'tut_stone_title'
+  },
+  [BlockType.Crate]: {
+    color: 'bg-amber-700',
+    icon: Box,
+    gradient: 'from-amber-700 to-amber-900',
+    textColor: 'text-amber-200',
+    borderColor: 'border-amber-600',
+    nameKey: 'tut_crate_title'
+  },
+  [BlockType.Obsidian]: {
+    color: 'bg-gray-900',
+    icon: Shield,
+    gradient: 'from-gray-800 to-black',
+    textColor: 'text-gray-400',
+    borderColor: 'border-gray-600',
+    nameKey: 'tut_obsidian_title'
+  },
+  [BlockType.Balloon]: {
+    color: 'bg-pink-400',
+    icon: Cloud,
+    gradient: 'from-pink-300 to-pink-500',
+    textColor: 'text-white',
+    borderColor: 'border-pink-200',
+    nameKey: 'tut_balloon_title'
+  },
+  [BlockType.Cage]: {
+    color: 'bg-orange-600',
+    icon: Grid3x3,
+    gradient: 'from-orange-500 to-orange-700',
+    textColor: 'text-orange-100',
+    borderColor: 'border-orange-400',
+    nameKey: 'tut_cage_title'
+  },
+  [BlockType.Honey]: {
+    color: 'bg-amber-500',
+    icon: Droplet,
+    gradient: 'from-amber-400 to-amber-600',
+    textColor: 'text-amber-100',
+    borderColor: 'border-amber-300',
+    nameKey: 'tut_honey_title'
+  },
+  [BlockType.Vortex]: {
+    color: 'bg-purple-600',
+    icon: Tornado,
+    gradient: 'from-purple-500 to-purple-700',
+    textColor: 'text-purple-100',
+    borderColor: 'border-purple-400',
+    nameKey: 'tut_vortex_title'
+  },
+
+  [BlockType.Empty]: {
+    color: 'bg-transparent',
+    icon: null,
+    gradient: '',
+    textColor: '',
+    borderColor: ''
+  }
+};
+
+export const LEVELS: LevelConfig[] = [
+  // Level 1: Very Simple - 3 Colors
+  {
+    levelNumber: 1,
+    moves: 20,
+    targets: { [BlockType.Fire]: 10 },
+    gridSize: { rows: 6, cols: 6 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature]
+  },
+  // Level 2: Simple - 3 Colors
+  {
+    levelNumber: 2,
+    moves: 25,
+    targets: { [BlockType.Water]: 15, [BlockType.Nature]: 15 },
+    gridSize: { rows: 7, cols: 6 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature]
+  },
+  // Level 3: Introduce 4th Color
+  {
+    levelNumber: 3,
+    moves: 25,
+    targets: { [BlockType.Electric]: 20 },
+    gridSize: { rows: 8, cols: 7 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric]
+  },
+  // Level 4: Larger Grid
+  {
+    levelNumber: 4,
+    moves: 30,
+    targets: { [BlockType.Fire]: 20, [BlockType.Water]: 20 },
+    gridSize: { rows: 8, cols: 8 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric]
+  },
+  // Level 5: Pure Match - 4 Colors (Simplified)
+  {
+    levelNumber: 5,
+    moves: 25,
+    targets: { [BlockType.Nature]: 20, [BlockType.Electric]: 20 },
+    gridSize: { rows: 8, cols: 8 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric]
+  },
+  // Level 6: Challenge Level - 4 Colors (Eased)
+  {
+    levelNumber: 6,
+    moves: 30,
+    targets: { [BlockType.Fire]: 25, [BlockType.Water]: 25 },
+    gridSize: { rows: 9, cols: 8 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric]
+  },
+  // Level 7: Vertical Layout - 4 Colors
+  {
+    levelNumber: 7,
+    moves: 30,
+    targets: { [BlockType.Nature]: 35 },
+    gridSize: { rows: 10, cols: 7 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric]
+  },
+  // Level 8: High Target - 4 Colors
+  {
+    levelNumber: 8,
+    moves: 35,
+    targets: { [BlockType.Electric]: 30, [BlockType.Fire]: 30 },
+    gridSize: { rows: 9, cols: 9 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric]
+  },
+  // Level 9: Pre-Boss Warmup - 4 Colors
+  {
+    levelNumber: 9,
+    moves: 30,
+    targets: { [BlockType.Water]: 45 },
+    gridSize: { rows: 9, cols: 9 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric]
+  },
+  // Level 10: Boss Level (Introduce 5th Color - Cosmic)
+  // No Hazards, just colors
+  {
+    levelNumber: 10,
+    moves: 40,
+    targets: { [BlockType.Cosmic]: 30 },
+    gridSize: { rows: 10, cols: 9 },
+    colorsAvailable: [BlockType.Fire, BlockType.Water, BlockType.Nature, BlockType.Electric, BlockType.Cosmic]
+  }
+];
+
+// --- POWER-UP CONFIGURATIONS ---
+export const POWERUP_CONFIG: Record<PowerUpType, {
+  minBlocks: number;
+  maxBlocks: number;
+  icon: any;
+  color: string;
+  gradient: string;
+  textColor: string;
+}> = {
+  [PowerUpType.Rocket]: {
+    minBlocks: 5,
+    maxBlocks: 5,
+    icon: Rocket,
+    color: 'bg-orange-500',
+    gradient: 'from-orange-400 to-red-600',
+    textColor: 'text-white'
+  },
+  [PowerUpType.Bomb]: {
+    minBlocks: 6,
+    maxBlocks: 8,
+    icon: Bomb,
+    color: 'bg-red-600',
+    gradient: 'from-red-500 to-red-800',
+    textColor: 'text-white'
+  },
+  [PowerUpType.DiscoBall]: {
+    minBlocks: 9,
+    maxBlocks: 999,
+    icon: Sparkles,
+    color: 'bg-purple-600',
+    gradient: 'from-purple-400 to-pink-600',
+    textColor: 'text-white'
+  },
+  [PowerUpType.Rainbow]: {
+    minBlocks: 7,
+    maxBlocks: 7,
+    icon: Rainbow,
+    color: 'bg-gradient-to-r from-red-500 via-yellow-500 to-purple-500',
+    gradient: 'from-red-400 via-yellow-400 to-purple-600',
+    textColor: 'text-white'
+  }
+};
+
+// --- LIVES CONFIGURATION ---
+export const LIVES_CONFIG = {
+  MAX_LIVES: 5,
+  REGEN_TIME_MS: 30 * 60 * 1000, // 30 minutes
+  COST_PER_LIFE: 100, // coins
+  UNLIMITED_DURATION_30MIN: 30 * 60 * 1000,
+  UNLIMITED_DURATION_1HOUR: 60 * 60 * 1000,
+  UNLIMITED_DURATION_FOREVER: -1
+};
+
+// --- ECONOMY CONFIGURATION ---
+export const ECONOMY = {
+  // Level Rewards
+  LEVEL_WIN_COINS_BASE: 50,
+  LEVEL_WIN_COINS_PER_STAR: 25,
+
+  // Quest Rewards
+  QUEST_REWARDS: {
+    EASY: 100,
+    MEDIUM: 200,
+    HARD: 500
+  },
+
+  // Power-up Costs (coins)
+  POWERUP_COSTS: {
+    [PowerUpType.Rocket]: 100,
+    [PowerUpType.Bomb]: 150,
+    [PowerUpType.DiscoBall]: 300,
+    [PowerUpType.Rainbow]: 200
+  },
+
+  // Ad Rewards
+  AD_REWARD_COINS: 100,
+  DAILY_AD_LIMIT: 5,
+
+  // IAP Prices (for display)
+  IAP_PRICES: {
+    REMOVE_ADS: '$4.99',
+    COINS_SMALL: '$1.99',
+    COINS_BIG: '$9.99',
+    VIP_MONTHLY: '$4.99',
+    STARTER_PACK: '$2.99',
+    LIVES_5: '$0.99'
+  }
+};
+
+// --- COMBO CONFIGURATION ---
+export const COMBO_CONFIG = {
+  MULTIPLIERS: [1, 1.5, 2, 2.5, 3, 4, 5, 7, 10],
+  TIMEOUT_MS: 3000, // 3 seconds without match = combo ends
+  MESSAGES: ['', 'nice', 'great', 'awesome', 'incredible', 'amazing', 'legendary']
+};
+
+// --- SCORE CONFIGURATION ---
+export const SCORE_CONFIG = {
+  BASE_BLOCK_SCORE: 10,
+  COMBO_BONUS_PER_BLOCK: 5,
+  POWERUP_ACTIVATION_BONUS: 50,
+  STAR_THRESHOLDS: {
+    ONE_STAR: 0.5,   // 50% of target score
+    TWO_STAR: 0.75,  // 75% of target score
+    THREE_STAR: 1.0  // 100% of target score
+  }
+};

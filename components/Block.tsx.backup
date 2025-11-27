@@ -1,0 +1,150 @@
+
+
+import React, { useEffect, useState } from 'react';
+import { BlockType, BlockData } from '../types';
+import { BLOCK_STYLES } from '../constants';
+import { Lock, Snowflake } from 'lucide-react';
+import { PowerUp } from './PowerUp';
+
+
+interface BlockProps {
+  data: BlockData;
+  onClick: (row: number, col: number) => void;
+  disabled: boolean;
+  gridSize: { rows: number; cols: number };
+  onWiggleEnd?: () => void;
+  wiggle?: boolean;
+}
+
+export const Block: React.FC<BlockProps> = ({ data, onClick, disabled, gridSize, wiggle, onWiggleEnd }) => {
+  const style = BLOCK_STYLES[data.type];
+  const [animateWiggle, setAnimateWiggle] = useState(false);
+
+  useEffect(() => {
+    if (wiggle) {
+      setAnimateWiggle(true);
+      const timer = setTimeout(() => {
+        setAnimateWiggle(false);
+        if (onWiggleEnd) onWiggleEnd();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [wiggle, onWiggleEnd]);
+
+  // Absolute positioning calculation
+  const widthPercent = 100 / gridSize.cols;
+  const heightPercent = 100 / gridSize.rows;
+  const top = data.row * heightPercent;
+  const left = data.col * widthPercent;
+
+  if (data.type === BlockType.Empty) {
+    // Even empty blocks keep space, but we render invisible to maintain grid logic visuals if needed
+    // But with absolute positioning, we just don't render anything if it's truly empty space waiting to be filled
+    // However, data.type is EMPTY during gravity calculation before refilling.
+    return null;
+  }
+
+  let animateClass = '';
+  if (data.isDying) {
+    animateClass = 'animate-scale-out z-10';
+  } else if (data.isNew) {
+    animateClass = 'animate-pop';
+  } else if (animateWiggle) {
+    animateClass = 'animate-wiggle';
+  }
+
+  const Icon = style.icon;
+  const isFrozen = data.isFrozen;
+  const isObstacle = data.type === BlockType.Stone || data.type === BlockType.Crate || data.type === BlockType.Obsidian;
+  const isInteractive = !disabled && !isFrozen && !isObstacle;
+
+  return (
+    <div
+      className={`absolute transition-all duration-300 ease-out p-[2px] box-border`}
+      style={{
+        width: `${widthPercent}%`,
+        height: `${heightPercent}%`,
+        top: `${top}%`,
+        left: `${left}%`,
+        zIndex: data.isDying ? 50 : 10
+      }}
+    >
+      <button
+        onClick={() => isInteractive && onClick(data.row, data.col)}
+        disabled={!isInteractive}
+        className={`
+          relative w-full h-full rounded-[20%] 
+          bg-gradient-to-b ${style.gradient}
+          border-[1px] ${style.borderColor || 'border-white/20'}
+          ${isInteractive ? 'hover:brightness-110' : ''} 
+          transform
+          ${isInteractive ? 'active:scale-90 active:duration-75' : ''}
+          flex items-center justify-center
+          shadow-[0_4px_0_rgba(0,0,0,0.2)]
+          ${isInteractive ? 'hover:-translate-y-0.5 hover:shadow-[0_5px_0_rgba(0,0,0,0.2)]' : ''}
+          active:translate-y-1 active:shadow-none
+          ${animateClass}
+          ${!isInteractive ? 'cursor-default' : 'cursor-pointer'}
+          ${data.type === BlockType.Stone ? 'rounded-[15%]' : ''} 
+          ${data.type === BlockType.Crate ? 'rounded-[10%]' : ''}
+          overflow-hidden
+        `}
+      >
+        {/* Inner Shine */}
+        <div className="absolute inset-0 rounded-[20%] shadow-[inset_0_3px_2px_rgba(255,255,255,0.4),inset_0_-3px_4px_rgba(0,0,0,0.15)] pointer-events-none" />
+
+        {/* Specular Highlight */}
+        {!isObstacle && <div className="absolute top-[15%] right-[15%] w-[20%] h-[20%] bg-white/60 rounded-full blur-[1px] pointer-events-none" />}
+
+        {/* Obsidian Health */}
+        {data.type === BlockType.Obsidian && (
+          <>
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute bottom-1.5 flex gap-0.5 bg-black/50 p-0.5 rounded-full px-1 z-20">
+              {[...Array(data.maxHealth || 3)].map((_, i) => (
+                <div key={i} className={`w-1.5 h-1.5 rounded-full ${(data.health || 0) > i ? 'bg-fuchsia-400 shadow-[0_0_4px_fuchsia]' : 'bg-gray-800'}`} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Icon */}
+        {Icon && (
+          <Icon
+            className={`
+              ${data.type === BlockType.Obsidian ? 'w-3/5 h-3/5' : 'w-3/4 h-3/4'} 
+              ${style.textColor} drop-shadow-[0_1px_0px_rgba(255,255,255,0.2)]
+              ${isFrozen ? 'opacity-40' : ''} 
+              relative z-10 filter
+            `}
+            fill={data.type === BlockType.Obsidian ? "currentColor" : "none"}
+            strokeWidth={isObstacle ? 2 : 3.5}
+          />
+        )}
+
+        {/* Ice Overlay */}
+        {isFrozen && (
+          <div className="absolute inset-0 bg-cyan-300/40 rounded-[1.2rem] border-[3px] border-white/40 flex items-center justify-center z-20 backdrop-blur-[1px]">
+            <Snowflake className="text-white w-3/4 h-3/4 animate-pulse drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]" />
+            <div className="absolute top-1 left-1 bg-slate-900/60 rounded-full p-0.5 shadow-sm">
+              <Lock size={8} className="text-cyan-200" />
+            </div>
+          </div>
+        )}
+
+        {/* Power-Up Overlay */}
+        {data.powerUp && (
+          <div className="absolute inset-0 z-30">
+            <PowerUp
+              type={data.powerUp}
+              row={data.row}
+              col={data.col}
+              direction={data.powerUpDirection}
+              onClick={() => isInteractive && onClick(data.row, data.col)}
+            />
+          </div>
+        )}
+      </button>
+    </div>
+  );
+};
