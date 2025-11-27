@@ -692,53 +692,57 @@ const App: React.FC = () => {
     <div className="h-full w-full bg-[#2e1065] relative overflow-hidden flex flex-col">
       <DynamicBackground />
 
-      {/* Top Bar */}
-      <div className="p-4 flex items-center justify-between relative z-20">
-        <div className="flex items-center gap-3 bg-black/30 p-2 pr-4 rounded-full border border-white/10 backdrop-blur-md">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-600 flex items-center justify-center shadow-lg">
-            <span className="font-black text-white text-xl">P</span>
+      {/* Top Bar - Redesigned for better spacing */}
+      <div className="p-3 relative z-20 space-y-2">
+        {/* First Row: Level Info + Lives */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-600 flex items-center justify-center shadow-lg">
+              <span className="font-black text-white text-lg">P</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] text-indigo-300 font-bold uppercase">{t('level')}</span>
+              <span className="text-white font-black text-sm leading-none">{progress.maxLevelReached}</span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] text-indigo-300 font-bold uppercase">{t('level')}</span>
-            <span className="text-white font-black leading-none">{progress.maxLevelReached}</span>
+
+          {/* Lives Display */}
+          <div className="flex items-center gap-1.5 bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1.5 rounded-full shadow-lg">
+            <span className="text-white font-black text-sm">❤️ {progress.lives}</span>
           </div>
         </div>
 
-        {/* Lives Display - Simple */}
-        <div className="flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-2 rounded-full shadow-lg">
-          <span className="text-white font-black text-sm">❤️ {progress.lives}</span>
-        </div>
-
-        <div className="flex gap-3">
-          <button onClick={() => setShowDailyQuests(true)} className="bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-2xl shadow-lg border border-purple-400/30 relative">
-            <Gamepad2 size={20} />
+        {/* Second Row: Action Buttons */}
+        <div className="flex items-center justify-center gap-2">
+          <button onClick={() => setShowDailyQuests(true)} className="bg-purple-600 hover:bg-purple-500 active:scale-95 text-white p-2 rounded-xl shadow-md border border-purple-400/30 transition-transform">
+            <Gamepad2 size={18} />
           </button>
-          <button onClick={() => setShowAchievements(true)} className="bg-amber-600 hover:bg-amber-500 text-white p-3 rounded-2xl shadow-lg border border-amber-400/30">
-            <Star size={20} />
+          <button onClick={() => setShowAchievements(true)} className="bg-amber-600 hover:bg-amber-500 active:scale-95 text-white p-2 rounded-xl shadow-md border border-amber-400/30 transition-transform">
+            <Star size={18} />
           </button>
-          <button onClick={() => setShowTournament(true)} className="bg-rose-600 hover:bg-rose-500 text-white p-3 rounded-2xl shadow-lg border border-rose-400/30">
-            <Crown size={20} />
+          <button onClick={() => setShowTournament(true)} className="bg-rose-600 hover:bg-rose-500 active:scale-95 text-white p-2 rounded-xl shadow-md border border-rose-400/30 transition-transform">
+            <Crown size={18} />
           </button>
-          <button onClick={() => setShowShop(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-2xl shadow-lg border border-indigo-400/30 relative group">
-            <ShoppingCart size={20} />
-            {progress.coins < 100 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />}
+          <button onClick={() => setShowShop(true)} className="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white p-2 rounded-xl shadow-md border border-indigo-400/30 relative transition-transform">
+            <ShoppingCart size={18} />
+            {progress.coins < 100 && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />}
           </button>
-          <button onClick={() => setShowSettings(true)} className="bg-indigo-800 hover:bg-indigo-700 text-indigo-200 p-3 rounded-2xl shadow-lg border border-indigo-600/30">
-            <Settings size={20} />
+          <button onClick={() => setShowSettings(true)} className="bg-indigo-800 hover:bg-indigo-700 active:scale-95 text-indigo-200 p-2 rounded-xl shadow-md border border-indigo-600/30 transition-transform">
+            <Settings size={18} />
           </button>
         </div>
       </div>
 
-      {/* Coin Display Big */}
-      <div className="px-6 py-2 relative z-20 flex justify-center">
-        <div className="bg-indigo-900/50 border border-indigo-700 px-6 py-3 rounded-3xl flex items-center gap-3 shadow-xl backdrop-blur-sm">
-          <Coins className="text-yellow-400 drop-shadow-md" size={32} fill="currentColor" />
+      {/* Coin Display - More Compact */}
+      <div className="px-4 pb-2 relative z-20 flex justify-center">
+        <div className="bg-indigo-900/50 border border-indigo-700 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg backdrop-blur-sm">
+          <Coins className="text-yellow-400 drop-shadow-md" size={24} fill="currentColor" />
           <div className="flex flex-col">
-            <span className="text-xs text-indigo-300 font-bold uppercase tracking-widest">{t('coins')}</span>
-            <span className="text-2xl font-black text-white leading-none">{progress.coins.toLocaleString()}</span>
+            <span className="text-[9px] text-indigo-300 font-bold uppercase tracking-wide">{t('coins')}</span>
+            <span className="text-xl font-black text-white leading-none">{progress.coins.toLocaleString()}</span>
           </div>
-          <button onClick={() => setShowShop(true)} className="ml-2 bg-green-500 hover:bg-green-400 text-white p-1.5 rounded-lg shadow-sm active:scale-95">
-            <RotateCcw size={16} className="rotate-45" />
+          <button onClick={() => setShowShop(true)} className="ml-1 bg-green-500 hover:bg-green-400 text-white p-1 rounded-lg shadow-sm active:scale-95 transition-transform">
+            <RotateCcw size={14} className="rotate-45" />
           </button>
         </div>
       </div>
