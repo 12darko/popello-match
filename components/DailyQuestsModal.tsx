@@ -6,18 +6,20 @@ import { X, Target, Calendar } from 'lucide-react';
 import { claimQuestReward } from '../services/questService';
 
 interface DailyQuestsModalProps {
-    dailyQuests: DailyQuests;
+    quests: DailyQuests;
     onClose: () => void;
-    onClaimQuest: (quest: Quest) => void;
+    onClaim: (questId: string) => void;
+    t: (key: string) => string;
 }
 
 export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
-    dailyQuests,
+    quests,
     onClose,
-    onClaimQuest
+    onClaim,
+    t
 }) => {
-    const completedCount = dailyQuests.quests.filter(q => q.completed).length;
-    const claimedCount = dailyQuests.quests.filter(q => q.claimed).length;
+    const completedCount = quests.quests.filter(q => q.completed).length;
+    const claimedCount = quests.quests.filter(q => q.claimed).length;
 
     // Calculate time until refresh
     const now = new Date();
@@ -40,27 +42,27 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
 
                     <div className="flex items-center gap-3 mb-2">
                         <Target className="text-yellow-400" size={32} />
-                        <h2 className="text-2xl font-black text-white">Günlük Görevler</h2>
+                        <h2 className="text-2xl font-black text-white">{t('daily_quests')}</h2>
                     </div>
 
                     <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-2">
                             <Calendar size={16} className="text-indigo-300" />
-                            <span className="text-indigo-200">{hoursUntilRefresh} saat sonra yenilenir</span>
+                            <span className="text-indigo-200">{hoursUntilRefresh}h {t('until_refresh')}</span>
                         </div>
                         <div className="text-green-400 font-bold">
-                            {completedCount}/3 Tamamlandı
+                            {completedCount}/3 {t('completed')}
                         </div>
                     </div>
                 </div>
 
                 {/* Quests */}
                 <div className="p-6 space-y-4">
-                    {dailyQuests.quests.map(quest => (
+                    {quests.quests.map(quest => (
                         <QuestCard
                             key={quest.id}
                             quest={quest}
-                            onClaim={onClaimQuest}
+                            onClaim={(q) => onClaim(q.id)}
                         />
                     ))}
                 </div>
@@ -69,8 +71,8 @@ export const DailyQuestsModal: React.FC<DailyQuestsModalProps> = ({
                 {completedCount === 3 && claimedCount === 3 && (
                     <div className="p-6 pt-0">
                         <div className="bg-green-900/30 border-2 border-green-400 rounded-xl p-4 text-center">
-                            <p className="text-green-200 font-bold">🎉 Tüm görevleri tamamladın!</p>
-                            <p className="text-green-300 text-sm mt-1">Yarın yeni görevler seni bekliyor!</p>
+                            <p className="text-green-200 font-bold">🎉 {t('all_quests_done')}</p>
+                            <p className="text-green-300 text-sm mt-1">{t('new_quests_tomorrow')}</p>
                         </div>
                     </div>
                 )}

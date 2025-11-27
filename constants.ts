@@ -139,7 +139,11 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     quest_win: "Win {count} levels",
     quest_powerup: "Use {count} power-ups",
     quest_score: "Reach {score} points",
-    quest_combo: "Create {count} combos"
+    quest_combo: "Create {count} combos",
+    until_refresh: "until refresh",
+    completed: "Completed",
+    all_quests_done: "All quests completed!",
+    new_quests_tomorrow: "New quests available tomorrow!"
   },
   tr: {
     language_selector: "Dil",
@@ -272,7 +276,11 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     quest_win: "{count} seviye kazan",
     quest_powerup: "{count} power-up kullan",
     quest_score: "{score} puana ulaş",
-    quest_combo: "{count} kombo yap"
+    quest_combo: "{count} kombo yap",
+    until_refresh: "sonra yenilenir",
+    completed: "Tamamlandı",
+    all_quests_done: "Tüm görevleri tamamladın!",
+    new_quests_tomorrow: "Yarın yeni görevler seni bekliyor!"
   },
   es: {
     language_selector: "Idioma",
