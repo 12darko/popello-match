@@ -87,9 +87,9 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
                     </div>
                 </div>
 
-                {/* Category Tabs - Premium scrollable design */}
-                <div className="relative px-6 py-4 border-b border-indigo-700/50 overflow-x-auto backdrop-blur-sm bg-indigo-900/30">
-                    <div className="flex gap-2">
+                {/* Category Tabs - Responsive grid design */}
+                <div className="relative px-4 py-3 border-b border-indigo-700/50 backdrop-blur-sm bg-indigo-900/30">
+                    <div className="flex flex-wrap gap-2 justify-center">
                         {categories.map(category => {
                             const isSelected = selectedCategory === category.id;
                             return (
@@ -97,16 +97,17 @@ export const AchievementsModal: React.FC<AchievementsModalProps> = ({
                                     key={category.id}
                                     onClick={() => setSelectedCategory(category.id as any)}
                                     className={`
-                    px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all duration-300
-                    flex items-center gap-2 border-2
+                    px-3 py-2 rounded-xl font-bold text-xs transition-all duration-300
+                    flex items-center gap-1.5 border-2 min-w-[44px] justify-center
                     ${isSelected
                                             ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black border-yellow-300 shadow-lg shadow-yellow-500/50 scale-105'
                                             : 'bg-indigo-800/50 text-indigo-200 hover:bg-indigo-800 border-indigo-700/50 backdrop-blur-sm'
                                         }
                   `}
+                                    title={category.label}
                                 >
-                                    <span className="text-lg">{category.icon}</span>
-                                    {category.label}
+                                    <span className="text-base">{category.icon}</span>
+                                    <span className="hidden sm:inline">{category.label}</span>
                                 </button>
                             );
                         })}
