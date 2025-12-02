@@ -2,18 +2,18 @@
 
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { GameState, BlockData, LevelConfig, LevelProgress, BlockType, PlayerProgress, Inventory, Effect, PowerUpType, ComboData, Coordinates } from './types';
+import { GameState, BlockData, LevelConfig, LevelProgress, BlockType, PlayerProgress, Inventory, Effect, PowerUpType, ComboData, Coordinates, QuestType } from './types';
 import { LEVELS, BLOCK_STYLES, TRANSLATIONS, POWERUP_CONFIG, COMBO_CONFIG } from './constants';
-
 import { generateBoard, findConnectedBlocks, applyGravity, checkWinCondition, handleEnvironmentLogic, hasPossibleMoves, shuffleBoard, calculateStarRating, generateProceduralLevel, createPowerUpAtPosition, placeBoosters } from './services/gameLogic';
 import { activateRocket, activateBomb, activateDiscoBall, shouldCreatePowerUp } from './services/powerUpService';
 import { detectCombination, activateCombination, findAdjacentPowerUp } from './services/combinationService';
-import { calculateLives, useLive, canPlay, buyLives, addLives } from './services/livesService';
+import { calculateLives, useLive, addLives, buyLives, canPlay } from './services/livesService';
 import { getStrategicHint } from './services/geminiService';
 import { audioManager } from './services/audioManager';
 import { platformService, DEFAULT_PROGRESS } from './services/platformService';
 import { Block } from './components/Block';
 import { LevelGoal } from './components/LevelGoal';
+import { refreshQuestsIfNeeded, claimQuestReward, updateQuestProgress } from './services/questService';
 import { LivesIndicator, OutOfLivesModal } from './components/LivesIndicator';
 import { ComboCounter, ComboIndicator } from './components/ComboCounter';
 import { PreGameBoostersModal } from './components/PreGameBoostersModal';
@@ -38,7 +38,7 @@ import { DailyQuestsModal } from './components/DailyQuestsModal';
 import { useQuestTracking } from './hooks/useQuestTracking';
 import { AchievementsModal } from './components/modals/AchievementsModal';
 import { useAchievementTracking } from './hooks/useAchievementTracking';
-import { initializeAchievements } from './services/achievementService';
+import { initializeAchievements, checkAchievements } from './services/achievementService';
 import { TournamentModal } from './components/modals/TournamentModal';
 import { initializeTournament, shouldStartNewTournament } from './services/tournamentService';
 import { checkForTutorials } from './services/tutorialService';
@@ -88,10 +88,45 @@ const App: React.FC = () => {
   const { lang, setLanguage, t } = useLanguage();
   const levelListRef = useRef<HTMLDivElement>(null);
 
-  // NEW: Quest Tracking Hook - Temporarily disabled to fix crashes
+  // NEW: Quest Tracking Hook
   const questTracking = {
     handleClaimQuest: (questId: string) => {
-      console.log('Quest claimed:', questId);
+      const quest = progress.dailyQuests.quests.find(q => q.id === questId);
+      if (quest && quest.completed && !quest.claimed) {
+        const reward = claimQuestReward(quest);
+
+        setProgress(p => {
+          const updatedQuests = p.dailyQuests.quests.map(q =>
+            q.id === questId ? { ...q, claimed: true } : q
+          );
+
+          return {
+            ...p,
+            coins: p.coins + reward.coins,
+            inventory: {
+              ...p.inventory,
+              rockets: p.inventory.rockets + reward.rockets,
+              bombs: p.inventory.bombs + reward.bombs,
+              discoBalls: p.inventory.discoBalls + reward.discoBalls
+            },
+            dailyQuests: {
+              ...p.dailyQuests,
+              quests: updatedQuests,
+              completedToday: p.dailyQuests.completedToday + 1
+            }
+          };
+        });
+        audioManager.playWin();
+      }
+    },
+    trackProgress: (type: QuestType, amount: number = 1) => {
+      setProgress(p => ({
+        ...p,
+        dailyQuests: {
+          ...p.dailyQuests,
+          quests: updateQuestProgress(p.dailyQuests.quests, type, amount)
+        }
+      }));
     }
   };
 
@@ -117,8 +152,38 @@ const App: React.FC = () => {
   };
 
   // NEW: Achievement Tracking Hook - Temporarily disabled
+  // NEW: Achievement Tracking Hook
   const achievementTracking = {
-    trackProgress: () => { }
+    trackProgress: (update: Partial<AchievementProgress>) => {
+      setProgress(p => {
+        const current = p.achievementProgress || {};
+        const next = { ...current };
+
+        (Object.keys(update) as Array<keyof AchievementProgress>).forEach(key => {
+          if (key === 'maxCombo') {
+            (next[key] as number) = Math.max((current[key] as number || 0), (update[key] as number));
+          } else if (typeof update[key] === 'number') {
+            (next[key] as number) = (current[key] as number || 0) + (update[key] as number);
+          } else {
+            next[key] = update[key] as any;
+          }
+        });
+
+        // Check for unlocks
+        const { updatedAchievements, newlyUnlocked } = checkAchievements(p.achievements, next as AchievementProgress);
+
+        if (newlyUnlocked.length > 0) {
+          audioManager.playWin(); // Placeholder for achievement sound
+          // TODO: Show notification
+        }
+
+        return {
+          ...p,
+          achievementProgress: next as AchievementProgress,
+          achievements: updatedAchievements
+        };
+      });
+    }
   };
 
   // Initialization
@@ -151,6 +216,11 @@ const App: React.FC = () => {
         currentLives = (currentLives as any).current || 5;
       }
       loadedData.lives = calculateLives(currentLives, loadedData.lastLifeLostTime, loadedData.unlimitedLivesUntil);
+
+      // NEW: Refresh Quests
+      if (loadedData.dailyQuests) {
+        loadedData.dailyQuests = refreshQuestsIfNeeded(loadedData.dailyQuests);
+      }
 
       setProgress(loadedData);
       audioManager.setEnabled(loadedData.soundEnabled);
@@ -355,6 +425,13 @@ const App: React.FC = () => {
         if (progress.hapticsEnabled) platformService.vibrate(30);
 
         // Activate power-up based on type
+        questTracking.trackProgress(QuestType.UsePowerUps, 1);
+        achievementTracking.trackProgress({
+          totalPowerUpsUsed: 1,
+          rocketsUsed: clickedBlock.powerUp === PowerUpType.Rocket ? 1 : 0,
+          bombsUsed: clickedBlock.powerUp === PowerUpType.Bomb ? 1 : 0,
+          discoBallsUsed: clickedBlock.powerUp === PowerUpType.DiscoBall ? 1 : 0
+        });
         switch (clickedBlock.powerUp) {
           case PowerUpType.Rocket:
             blocksToDestroy = activateRocket(grid, row, col, clickedBlock.powerUpDirection || 'HORIZONTAL');
@@ -429,6 +506,8 @@ const App: React.FC = () => {
     // Play combo sound if level increased
     if (newCombo.level > 1) {
       audioManager.playCombo(newCombo.level);
+      questTracking.trackProgress(QuestType.CreateCombos, 1);
+      achievementTracking.trackProgress({ maxCombo: newCombo.level });
     }
 
     // Update combo record
@@ -447,6 +526,8 @@ const App: React.FC = () => {
       scoreGain += 10;
     });
     scoreGain += (connected.length - 2) * 5;
+    questTracking.trackProgress(QuestType.CollectBlocks, connected.length);
+    achievementTracking.trackProgress({ blocksDestroyed: connected.length });
 
     // NEW: Apply combo multiplier
     scoreGain = Math.floor(scoreGain * newCombo.multiplier);
@@ -492,6 +573,8 @@ const App: React.FC = () => {
     if (envChanges.length > 0) {
       audioManager.playIceCrack();
       if (progress.hapticsEnabled) platformService.vibrate(30);
+      questTracking.trackProgress(QuestType.DestroyObstacles, envChanges.length);
+      achievementTracking.trackProgress({ obstaclesDestroyed: envChanges.length });
     }
 
     // 3. Gravity & Refill
@@ -549,6 +632,17 @@ const App: React.FC = () => {
     if (progress.hapticsEnabled) platformService.vibrate(100);
 
     const stars = calculateStarRating(finalScore, levelConfig);
+
+    // Track Quests
+    questTracking.trackProgress(QuestType.WinLevels, 1);
+    questTracking.trackProgress(QuestType.ReachScore, finalScore);
+    questTracking.trackProgress(QuestType.GetStars, stars);
+    achievementTracking.trackProgress({
+      levelsCompleted: 1,
+      totalScore: finalScore,
+      totalStars: stars,
+      perfectLevels: stars === 3 ? 1 : 0
+    });
 
     // Update Progress
     const newProgress = { ...progress };
