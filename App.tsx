@@ -40,7 +40,7 @@ import { AchievementsModal } from './components/modals/AchievementsModal';
 import { useAchievementTracking } from './hooks/useAchievementTracking';
 import { initializeAchievements, checkAchievements } from './services/achievementService';
 import { TournamentModal } from './components/modals/TournamentModal';
-import { initializeTournament, shouldStartNewTournament } from './services/tournamentService';
+import { initializeTournament, shouldStartNewTournament, updateTournamentScore, claimTournamentReward } from './services/tournamentService';
 import { checkForTutorials } from './services/tutorialService';
 import { useBoosterMode } from './hooks/useBoosterMode';
 import { MockAdModal } from './components/modals/MockAdModal';
@@ -220,6 +220,11 @@ const App: React.FC = () => {
       // NEW: Refresh Quests
       if (loadedData.dailyQuests) {
         loadedData.dailyQuests = refreshQuestsIfNeeded(loadedData.dailyQuests);
+      }
+
+      // NEW: Refresh Tournament
+      if (shouldStartNewTournament(loadedData.currentTournament)) {
+        loadedData.currentTournament = initializeTournament();
       }
 
       setProgress(loadedData);
@@ -644,8 +649,18 @@ const App: React.FC = () => {
       perfectLevels: stars === 3 ? 1 : 0
     });
 
-    // Update Progress
+    // Update Tournament Score
     const newProgress = { ...progress };
+    if (progress.currentTournament && Date.now() < progress.currentTournament.endTime) {
+      const updatedTournament = updateTournamentScore(
+        progress.currentTournament,
+        finalScore,
+        'Player'
+      );
+      newProgress.currentTournament = updatedTournament;
+    }
+
+    // Update Progress
     newProgress.levelScores[levelConfig.levelNumber] = Math.max(
       newProgress.levelScores[levelConfig.levelNumber] || 0,
       stars
@@ -1248,8 +1263,37 @@ const App: React.FC = () => {
         <TournamentModal
           tournament={progress.currentTournament}
           onJoin={() => {
-            const newTournament = initializeTournament();
-            setProgress(p => ({ ...p, currentTournament: newTournament }));
+            // If no tournament, initialize new one
+            if (!progress.currentTournament) {
+              const newTournament = initializeTournament();
+              setProgress(p => ({ ...p, currentTournament: newTournament }));
+              setShowTournament(false);
+              return;
+            }
+
+            // If tournament ended, claim reward
+            const tournament = progress.currentTournament;
+            if (Date.now() >= tournament.endTime && !tournament.hasClaimedReward) {
+              const reward = claimTournamentReward(tournament);
+
+              setProgress(p => ({
+                ...p,
+                coins: p.coins + reward.coins,
+                inventory: {
+                  ...p.inventory,
+                  rockets: p.inventory.rockets + reward.rockets,
+                  bombs: p.inventory.bombs + reward.bombs,
+                  discoBalls: p.inventory.discoBalls + reward.discoBalls
+                },
+                currentTournament: {
+                  ...tournament,
+                  hasClaimedReward: true
+                }
+              }));
+
+              audioManager.playWin();
+              setShowTournament(false);
+            }
           }}
           onClose={() => setShowTournament(false)}
           t={t}
