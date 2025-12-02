@@ -167,6 +167,19 @@ const App: React.FC = () => {
     }
   }, [progress.maxLevelReached, gameState]);
 
+  // Lives Regeneration Timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (progress.lives < 5) {
+        const newLives = calculateLives(progress.lives, progress.lastLifeLostTime, progress.unlimitedLivesUntil);
+        if (newLives > progress.lives) {
+          setProgress(p => ({ ...p, lives: newLives }));
+        }
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [progress.lives, progress.lastLifeLostTime, progress.unlimitedLivesUntil]);
+
   // Helper for effects
   // Helper for effects
   const addEffect = (type: 'TEXT' | 'PARTICLE', col: number, row: number, content?: string, color?: string) => {
@@ -554,6 +567,12 @@ const App: React.FC = () => {
 
   // Menus
   const handleLevelSelect = (levelNum: number) => {
+    // Check if player has lives
+    if (!canPlay(progress.lives, progress.unlimitedLivesUntil)) {
+      setShowOutOfLives(true);
+      return;
+    }
+
     // Use predefined levels for 1-10, procedural for 11+
     const config = LEVELS[levelNum - 1] || generateProceduralLevel(levelNum);
     setPendingLevelConfig(config);
@@ -593,7 +612,7 @@ const App: React.FC = () => {
       </div>
 
       <div className="flex gap-4 w-full max-w-xs z-10">
-        <button onClick={() => setGameState(GameState.LevelSelect)} className="flex-1 bg-indigo-800 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl shadow-[0_4px_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
+        <button onClick={() => setGameState(GameState.Menu)} className="flex-1 bg-indigo-800 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl shadow-[0_4px_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all">
           {t('menu')}
         </button>
         <button onClick={() => handleLevelSelect(levelConfig!.levelNumber + 1)} className="flex-[2] bg-green-500 hover:bg-green-400 text-white font-black py-4 rounded-2xl shadow-[0_4px_0_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2">
@@ -623,7 +642,7 @@ const App: React.FC = () => {
         <div className="p-2 relative z-20 space-y-2">
           {/* Top Row: Menu, Lives, Combo, Moves */}
           <div className="flex items-center justify-between gap-2">
-            <button onClick={() => setGameState(GameState.LevelSelect)} className="bg-indigo-800/80 p-2 rounded-xl border border-indigo-600/50 shadow-lg active:scale-95 transition-transform backdrop-blur-md">
+            <button onClick={() => setGameState(GameState.Menu)} className="bg-indigo-800/80 p-2 rounded-xl border border-indigo-600/50 shadow-lg active:scale-95 transition-transform backdrop-blur-md">
               <Menu size={20} className="text-indigo-100" />
             </button>
 
@@ -695,13 +714,21 @@ const App: React.FC = () => {
           </button>
 
           <div className="flex gap-2">
-            <button className="bg-indigo-800/50 p-4 rounded-2xl border border-indigo-700 flex flex-col items-center gap-1 relative opacity-50">
+            <button
+              onClick={boosterMode.activateHammer}
+              disabled={progress.inventory.hammers === 0}
+              className={`bg-indigo-800/50 p-4 rounded-2xl border border-indigo-700 flex flex-col items-center gap-1 relative ${progress.inventory.hammers === 0 ? 'opacity-50' : 'active:scale-95 hover:bg-indigo-700/50'}`}
+            >
               <Hammer size={20} className="text-red-400" />
-              <span className="text-[10px] font-bold">1</span>
+              <span className="text-[10px] font-bold">{progress.inventory.hammers}</span>
             </button>
-            <button className="bg-indigo-800/50 p-4 rounded-2xl border border-indigo-700 flex flex-col items-center gap-1 relative opacity-50">
+            <button
+              onClick={boosterMode.activateShuffle}
+              disabled={progress.inventory.shuffles === 0}
+              className={`bg-indigo-800/50 p-4 rounded-2xl border border-indigo-700 flex flex-col items-center gap-1 relative ${progress.inventory.shuffles === 0 ? 'opacity-50' : 'active:scale-95 hover:bg-indigo-700/50'}`}
+            >
               <Shuffle size={20} className="text-blue-400" />
-              <span className="text-[10px] font-bold">1</span>
+              <span className="text-[10px] font-bold">{progress.inventory.shuffles}</span>
             </button>
           </div>
         </div>
@@ -866,7 +893,7 @@ const App: React.FC = () => {
               <button onClick={() => handleLevelSelect(levelConfig!.levelNumber)} className="w-full bg-white text-indigo-900 font-black py-4 rounded-2xl shadow-lg hover:scale-105 transition-transform">
                 {t('retry')}
               </button>
-              <button onClick={() => setGameState(GameState.LevelSelect)} className="mt-4 text-indigo-400 text-sm font-bold hover:text-white">
+              <button onClick={() => setGameState(GameState.Menu)} className="mt-4 text-indigo-400 text-sm font-bold hover:text-white">
                 {t('menu')}
               </button>
             </div>
@@ -943,8 +970,21 @@ const App: React.FC = () => {
           inventory={progress.inventory}
           onStart={(boosters) => {
             setShowPreGameBoosters(false);
-            startGame(pendingLevelConfig, boosters); // Pass boosters here
-            // TODO: Booster placement logic
+
+            // Deduct life
+            if (progress.unlimitedLivesUntil < Date.now()) {
+              const newLives = useLive(progress.lives);
+              setProgress(p => {
+                const newP = { ...p, lives: newLives };
+                // If we were at max lives, set the lost time to now to start regen timer
+                if (p.lives === 5 && newLives < 5) {
+                  newP.lastLifeLostTime = Date.now();
+                }
+                return newP;
+              });
+            }
+
+            startGame(pendingLevelConfig, boosters);
           }}
           onSkip={() => {
             setShowPreGameBoosters(false);

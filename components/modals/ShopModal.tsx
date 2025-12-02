@@ -125,9 +125,9 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                 <div className="space-y-3">
                     <h3 className="text-purple-400 text-[10px] font-bold uppercase tracking-widest ml-1">{t('boosters')}</h3>
                     {[
-                        { id: 'rockets', name: t('powerup_rocket'), desc: t('powerup_rocket_desc'), emoji: '🚀', cost: 200, owned: inventory.rockets, color: 'text-blue-400', bg: 'bg-blue-500/20' },
-                        { id: 'bombs', name: t('powerup_bomb'), desc: t('powerup_bomb_desc'), emoji: '💣', cost: 250, owned: inventory.bombs, color: 'text-red-400', bg: 'bg-red-500/20' },
-                        { id: 'discoBalls', name: t('powerup_disco'), desc: t('powerup_disco_desc'), emoji: '🪩', cost: 300, owned: inventory.discoBalls, color: 'text-purple-400', bg: 'bg-purple-500/20' }
+                        { id: 'rocket', name: t('powerup_rocket'), desc: t('powerup_rocket_desc'), emoji: '🚀', cost: 200, owned: inventory.rockets, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+                        { id: 'bomb', name: t('powerup_bomb'), desc: t('powerup_bomb_desc'), emoji: '💣', cost: 250, owned: inventory.bombs, color: 'text-red-400', bg: 'bg-red-500/20' },
+                        { id: 'discoBall', name: t('powerup_disco'), desc: t('powerup_disco_desc'), emoji: '🪩', cost: 300, owned: inventory.discoBalls, color: 'text-purple-400', bg: 'bg-purple-500/20' }
                     ].map(item => (
                         <div key={item.id} className="bg-indigo-900/50 p-3 rounded-2xl border border-indigo-800 flex items-center justify-center relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-200%] animate-[shimmer_2s_infinite]" />

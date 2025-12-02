@@ -1,96 +1,78 @@
-import { useState } from 'react';
-import { GameState, BlockData, LevelConfig, BlockType, ComboData } from '../types';
+import { useState, useEffect } from 'react';
+import { GameState, PlayerProgress, LevelConfig, BlockType } from '../types';
+import { DEFAULT_PROGRESS, platformService } from '../services/platformService';
+import { audioManager } from '../services/audioManager';
+import { calculateLives } from '../services/livesService';
 
-interface GameStateReturn {
-    // State
-    gameState: GameState;
-    grid: BlockData[][];
-    levelConfig: LevelConfig | null;
-    score: number;
-    movesLeft: number;
-    targetsLeft: Partial<Record<BlockType, number>>;
-    selectedBlock: { row: number; col: number } | null;
-    canInteract: boolean;
-    hint: string | null;
-    isBotThinking: boolean;
-    combo: ComboData;
-
-    // Setters
-    setGameState: (state: GameState) => void;
-    setGrid: (grid: BlockData[][]) => void;
-    setLevelConfig: (config: LevelConfig | null) => void;
-    setScore: (score: number | ((prev: number) => number)) => void;
-    setMovesLeft: (moves: number) => void;
-    setTargetsLeft: (targets: Partial<Record<BlockType, number>>) => void;
-    setSelectedBlock: (block: { row: number; col: number } | null) => void;
-    setCanInteract: (canInteract: boolean) => void;
-    setHint: (hint: string | null) => void;
-    setIsBotThinking: (thinking: boolean) => void;
-    setCombo: (combo: ComboData | ((prev: ComboData) => ComboData)) => void;
-
-    // Helper functions
-    resetGameState: () => void;
-    initializeLevel: (config: LevelConfig) => void;
-}
-
-export const useGameState = (): GameStateReturn => {
+export const useGameState = () => {
     const [gameState, setGameState] = useState<GameState>(GameState.Menu);
-    const [grid, setGrid] = useState<BlockData[][]>([]);
+    const [progress, setProgress] = useState<PlayerProgress>(DEFAULT_PROGRESS);
     const [levelConfig, setLevelConfig] = useState<LevelConfig | null>(null);
     const [score, setScore] = useState(0);
     const [movesLeft, setMovesLeft] = useState(0);
     const [targetsLeft, setTargetsLeft] = useState<Partial<Record<BlockType, number>>>({});
-    const [selectedBlock, setSelectedBlock] = useState<{ row: number; col: number } | null>(null);
-    const [canInteract, setCanInteract] = useState(true);
-    const [hint, setHint] = useState<string | null>(null);
-    const [isBotThinking, setIsBotThinking] = useState(false);
-    const [combo, setCombo] = useState<ComboData>({ level: 0, multiplier: 1, lastMatchTime: 0 });
+    const [isLoading, setIsLoading] = useState(true);
+    const [combo, setCombo] = useState({ level: 0, multiplier: 1, lastMatchTime: 0 });
 
-    const resetGameState = () => {
-        setScore(0);
-        setMovesLeft(0);
-        setTargetsLeft({});
-        setSelectedBlock(null);
-        setCanInteract(true);
-        setHint(null);
-        setCombo({ level: 0, multiplier: 1, lastMatchTime: 0 });
-    };
+    // Initialization
+    useEffect(() => {
+        const init = async () => {
+            const loadedData = await platformService.loadGameData();
 
-    const initializeLevel = (config: LevelConfig) => {
-        setLevelConfig(config);
-        setScore(0);
-        setMovesLeft(config.moves);
-        setTargetsLeft({ ...config.targets });
-        setHint(null);
-        setCanInteract(true);
-        setCombo({ level: 0, multiplier: 1, lastMatchTime: 0 });
-        setGameState(GameState.Playing);
-    };
+            // Daily Login Check
+            const today = new Date().toDateString();
+            if (loadedData.lastLoginDate !== today) {
+                const yesterday = new Date(Date.now() - 86400000).toDateString();
+                if (loadedData.lastLoginDate === yesterday) {
+                    loadedData.loginStreak += 1;
+                } else {
+                    loadedData.loginStreak = 1;
+                }
+                loadedData.lastLoginDate = today;
+                loadedData.dailyAdWatchCount = 0;
+            }
+
+            // Sanitize lives
+            let currentLives = loadedData.lives;
+            if (typeof currentLives === 'object') {
+                currentLives = (currentLives as any).current || 5;
+            }
+            loadedData.lives = calculateLives(currentLives, loadedData.lastLifeLostTime, loadedData.unlimitedLivesUntil);
+
+            setProgress(loadedData);
+            audioManager.setEnabled(loadedData.soundEnabled);
+
+            setTimeout(() => setIsLoading(false), 1500);
+        };
+        init();
+        audioManager.startMenuMusic();
+
+        return () => audioManager.stopMenuMusic();
+    }, []);
+
+    // Save Loop
+    useEffect(() => {
+        if (progress !== DEFAULT_PROGRESS) {
+            platformService.saveGameData(progress);
+        }
+    }, [progress]);
 
     return {
         gameState,
-        grid,
-        levelConfig,
-        score,
-        movesLeft,
-        targetsLeft,
-        selectedBlock,
-        canInteract,
-        hint,
-        isBotThinking,
-        combo,
         setGameState,
-        setGrid,
+        progress,
+        setProgress,
+        levelConfig,
         setLevelConfig,
+        score,
         setScore,
+        movesLeft,
         setMovesLeft,
+        targetsLeft,
         setTargetsLeft,
-        setSelectedBlock,
-        setCanInteract,
-        setHint,
-        setIsBotThinking,
-        setCombo,
-        resetGameState,
-        initializeLevel,
+        isLoading,
+        setIsLoading,
+        combo,
+        setCombo
     };
 };
