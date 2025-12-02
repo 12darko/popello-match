@@ -64,6 +64,7 @@ const App: React.FC = () => {
   const [hint, setHint] = useState<string | null>(null);
   const [isBotThinking, setIsBotThinking] = useState(false);
   const [effects, setEffects] = useState<Effect[]>([]);
+  const [activeBooster, setActiveBooster] = useState<'HAMMER' | null>(null);
 
   // NEW: Combo System
   const [combo, setCombo] = useState<ComboData>({ level: 0, multiplier: 1, lastMatchTime: 0 });
@@ -94,10 +95,25 @@ const App: React.FC = () => {
     }
   };
 
-  // NEW: Booster Mode Hook - Temporarily disabled
+  // NEW: Booster Mode Hook
   const boosterMode = {
-    activateHammer: () => console.log('Hammer activated'),
-    activateShuffle: () => console.log('Shuffle activated')
+    activateHammer: () => {
+      if (progress.inventory.hammers > 0) {
+        setActiveBooster('HAMMER');
+        // Optional: Show toast or visual cue
+      }
+    },
+    activateShuffle: () => {
+      if (progress.inventory.shuffles > 0 && levelConfig) {
+        const shuffled = shuffleBoard(grid, levelConfig.colorsAvailable);
+        setGrid(shuffled);
+        audioManager.playPurchase();
+        setProgress(p => ({
+          ...p,
+          inventory: { ...p.inventory, shuffles: p.inventory.shuffles - 1 }
+        }));
+      }
+    }
   };
 
   // NEW: Achievement Tracking Hook - Temporarily disabled
@@ -284,6 +300,28 @@ const App: React.FC = () => {
     const clickedBlock = grid[row][col];
     if (clickedBlock.type === BlockType.Empty || clickedBlock.isFrozen) {
       audioManager.playClick();
+      return;
+    }
+
+    // HAMMER LOGIC
+    if (activeBooster === 'HAMMER') {
+      audioManager.playPop(); // Smash sound
+      if (progress.hapticsEnabled) platformService.vibrate(50);
+
+      const newGrid = grid.map(r => r.map(b => ({ ...b })));
+      newGrid[row][col].type = BlockType.Empty;
+
+      // Apply gravity
+      const gravityBoard = applyGravity(newGrid, levelConfig.colorsAvailable);
+      setGrid(gravityBoard);
+
+      // Deduct inventory
+      setProgress(p => ({
+        ...p,
+        inventory: { ...p.inventory, hammers: p.inventory.hammers - 1 }
+      }));
+
+      setActiveBooster(null);
       return;
     }
 
@@ -717,7 +755,7 @@ const App: React.FC = () => {
             <button
               onClick={boosterMode.activateHammer}
               disabled={progress.inventory.hammers === 0}
-              className={`bg-indigo-800/50 p-4 rounded-2xl border border-indigo-700 flex flex-col items-center gap-1 relative ${progress.inventory.hammers === 0 ? 'opacity-50' : 'active:scale-95 hover:bg-indigo-700/50'}`}
+              className={`bg-indigo-800/50 p-4 rounded-2xl border border-indigo-700 flex flex-col items-center gap-1 relative ${progress.inventory.hammers === 0 ? 'opacity-50' : 'active:scale-95 hover:bg-indigo-700/50'} ${activeBooster === 'HAMMER' ? 'ring-2 ring-yellow-400 bg-indigo-700 animate-pulse' : ''}`}
             >
               <Hammer size={20} className="text-red-400" />
               <span className="text-[10px] font-bold">{progress.inventory.hammers}</span>
@@ -733,23 +771,28 @@ const App: React.FC = () => {
           </div>
         </div>
 
+
         {/* Hint Overlay */}
-        {hint && (
-          <div className="absolute bottom-32 left-0 right-0 flex justify-center z-30 px-6 animate-slide-up pointer-events-none">
-            <div className="bg-indigo-900/90 text-white px-6 py-3 rounded-full shadow-2xl border-2 border-indigo-400 text-center font-bold text-sm flex items-center gap-2 backdrop-blur-md">
-              <BrainCircuit size={16} className="text-yellow-400" />
-              {hint}
+        {
+          hint && (
+            <div className="absolute bottom-32 left-0 right-0 flex justify-center z-30 px-6 animate-slide-up pointer-events-none">
+              <div className="bg-indigo-900/90 text-white px-6 py-3 rounded-full shadow-2xl border-2 border-indigo-400 text-center font-bold text-sm flex items-center gap-2 backdrop-blur-md">
+                <BrainCircuit size={16} className="text-yellow-400" />
+                {hint}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
         {/* Modals */}
-        {showTutorial && <TutorialModal type={showTutorial} onClose={() => {
-          setShowTutorial(null);
-          const newSeen = { ...progress.seenTutorials, [showTutorial]: true };
-          setProgress(p => ({ ...p, seenTutorials: newSeen }));
-        }} t={t} />}
-      </PageTransition>
+        {
+          showTutorial && <TutorialModal type={showTutorial} onClose={() => {
+            setShowTutorial(null);
+            const newSeen = { ...progress.seenTutorials, [showTutorial]: true };
+            setProgress(p => ({ ...p, seenTutorials: newSeen }));
+          }} t={t} />
+        }
+      </PageTransition >
     );
   }
 

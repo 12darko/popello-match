@@ -48,18 +48,13 @@ export const PreGameBoostersModal: React.FC<PreGameBoostersModalProps> = ({
         }
     ];
 
-    const increment = (id: string, max: number, available: number) => {
-        const current = selected[id as keyof SelectedBoosters] || 0;
-        if (current < max && current < available) {
-            setSelected(prev => ({ ...prev, [id]: current + 1 }));
-        }
-    };
+    const toggleSelection = (id: string, available: number) => {
+        if (available === 0) return;
 
-    const decrement = (id: string) => {
         const current = selected[id as keyof SelectedBoosters] || 0;
-        if (current > 0) {
-            setSelected(prev => ({ ...prev, [id]: current - 1 }));
-        }
+        const newCount = current === 0 ? 1 : 0;
+
+        setSelected(prev => ({ ...prev, [id]: newCount }));
     };
 
     const totalSelected = (selected.rockets || 0) + (selected.bombs || 0) + (selected.discoBalls || 0);
@@ -82,68 +77,62 @@ export const PreGameBoostersModal: React.FC<PreGameBoostersModalProps> = ({
                 <div className="p-6 space-y-4">
                     {boosters.map(booster => {
                         const currentSelected = selected[booster.id as keyof SelectedBoosters] || 0;
-                        const isMaxed = currentSelected >= booster.max || currentSelected >= booster.available;
+                        const isSelected = currentSelected > 0;
                         const hasNone = booster.available === 0;
 
                         return (
-                            <div
+                            <button
                                 key={booster.id}
-                                className={`bg-gradient-to-r ${booster.color} p-4 rounded-2xl border-2 ${currentSelected > 0 ? 'border-yellow-400 shadow-lg shadow-yellow-400/50' : 'border-white/20'
-                                    } transition-all duration-300 ${hasNone ? 'opacity-50' : ''}`}
+                                onClick={() => toggleSelection(booster.id, booster.available)}
+                                disabled={hasNone}
+                                className={`w-full relative overflow-hidden group transition-all duration-300
+                                    ${isSelected
+                                        ? `bg-gradient-to-r ${booster.color} border-2 border-yellow-400 shadow-lg shadow-yellow-400/20 scale-[1.02]`
+                                        : `bg-indigo-900/40 border-2 border-indigo-800 hover:bg-indigo-900/60`
+                                    } 
+                                    ${hasNone ? 'opacity-50 grayscale cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+                                    p-4 rounded-2xl flex items-center justify-between
+                                `}
                             >
-                                <div className="flex items-center justify-between">
-                                    {/* Icon & Info */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
-                                            {booster.icon}
+                                <div className="flex items-center gap-4 relative z-10">
+                                    <div className={`p-3 rounded-xl backdrop-blur-sm transition-colors ${isSelected ? 'bg-white/20' : 'bg-indigo-950/50'}`}>
+                                        {booster.icon}
+                                    </div>
+                                    <div className="text-left">
+                                        <div className={`font-black text-lg ${isSelected ? 'text-white' : 'text-indigo-100'}`}>
+                                            {booster.name}
                                         </div>
-                                        <div>
-                                            <div className="text-white font-bold text-lg">{booster.name}</div>
-                                            <div className="text-white/80 text-xs">
-                                                {t('available')}: {booster.available}
-                                            </div>
+                                        <div className={`text-xs font-bold ${isSelected ? 'text-white/90' : 'text-indigo-400'}`}>
+                                            {t('available')}: {booster.available}
                                         </div>
                                     </div>
+                                </div>
 
-                                    {/* Counter */}
+                                <div className="relative z-10">
                                     {hasNone ? (
-                                        <div className="text-white/60 text-sm font-bold">{t('none')}</div>
+                                        <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider bg-indigo-950/30 px-3 py-1 rounded-lg">
+                                            {t('none')}
+                                        </span>
                                     ) : (
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => decrement(booster.id)}
-                                                disabled={currentSelected === 0}
-                                                className="bg-white/20 hover:bg-white/30 disabled:opacity-30 w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xl active:scale-95 transition-all"
-                                            >
-                                                −
-                                            </button>
-                                            <div className="w-12 text-center text-white font-black text-2xl">
-                                                {currentSelected}
-                                            </div>
-                                            <button
-                                                onClick={() => increment(booster.id, booster.max, booster.available)}
-                                                disabled={isMaxed}
-                                                className="bg-white/20 hover:bg-white/30 disabled:opacity-30 w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xl active:scale-95 transition-all"
-                                            >
-                                                +
-                                            </button>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all
+                                            ${isSelected
+                                                ? 'bg-yellow-400 border-yellow-400 text-indigo-900'
+                                                : 'border-indigo-600 text-transparent'
+                                            }
+                                        `}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </button>
                         );
                     })}
                 </div>
 
                 {/* Footer */}
                 <div className="p-6 pt-0 space-y-3">
-                    {hasSelection && (
-                        <div className="bg-indigo-900/50 p-3 rounded-xl border border-indigo-700 text-center">
-                            <div className="text-indigo-300 text-xs uppercase tracking-wide">{t('total_selected')}</div>
-                            <div className="text-white font-black text-xl">{totalSelected} {t('boosters')}</div>
-                        </div>
-                    )}
-
                     <div className="flex gap-3">
                         <button
                             onClick={onSkip}
